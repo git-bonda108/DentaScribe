@@ -1,0 +1,17 @@
+# DentaScribe theme — dental-clean palette
+# Anchored at #1E2327 (matches Dentsi meta-theme-color), teal primary, mint accent.
+
+[theme]
+base = "light"
+primaryColor = "#0EA5A4"
+backgroundColor = "#F7FBFC"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1E2327"
+font = "sans serif"
+
+[server]
+headless = true
+runOnSave = true
+
+[browser]
+gatherUsageStats = false

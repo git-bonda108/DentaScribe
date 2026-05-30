@@ -1,0 +1,35 @@
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Local state
+.runtime/
+*.db
+*.db-journal
+dentascribe.db
+
+# Eval artifacts — only baseline is tracked
+eval/reports/eval-*.json
+eval/reports/eval-*.md
+
+# Streamlit / OS
+.streamlit/secrets.toml
+.DS_Store

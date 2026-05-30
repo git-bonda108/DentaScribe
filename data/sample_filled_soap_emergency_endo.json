@@ -1,0 +1,310 @@
+{
+  "encounter_meta": {
+    "patient_ref": "PT-000147",
+    "provider": {
+      "name": "Dr. A. Patel, DDS",
+      "license_number": "TX-DDS-12345",
+      "npi": "",
+      "role": "dentist"
+    },
+    "date_iso": "2026-05-30",
+    "visit_type": "emergency",
+    "tooth_numbering_system": "Universal",
+    "practice_location": {
+      "name": "DentaScribe Demo Practice",
+      "city": "Dallas",
+      "state": "TX"
+    }
+  },
+  "subjective": {
+    "chief_complaint": "\"I've had this sharp pain on my lower left tooth for about three days, especially with cold drinks.\"",
+    "hpi": {
+      "onset": "3 days ago",
+      "duration": "Constant background ache with sharp spikes",
+      "character": "sharp",
+      "severity_0_10": 7,
+      "triggers": [
+        "cold",
+        "biting"
+      ],
+      "relieving_factors": [
+        "ibuprofen 400mg"
+      ],
+      "functional_impact": "Avoiding chewing on the left side; disturbs sleep"
+    },
+    "medical_history_update": "No new conditions. Hypertension stable on lisinopril.",
+    "medications": [
+      {
+        "name": "lisinopril",
+        "dose": "10 mg",
+        "frequency": "once daily"
+      },
+      {
+        "name": "ibuprofen",
+        "dose": "400 mg",
+        "frequency": "every 6 hours PRN"
+      }
+    ],
+    "allergies": [
+      "NKDA"
+    ],
+    "dental_history": "Last cleaning 8 months ago; previous composite on #19 ~4 years ago.",
+    "social_history": {
+      "tobacco": "Never",
+      "alcohol": "Occasional",
+      "oral_hygiene": "Brushes twice daily, flosses 2-3x/week"
+    },
+    "patient_goals": "Stop the pain and save the tooth if possible."
+  },
+  "objective": {
+    "vitals": {
+      "bp": "128/82",
+      "hr": "76",
+      "temp": null,
+      "spo2": null
+    },
+    "extraoral": {
+      "facial_symmetry": "Symmetric",
+      "lymph_nodes": "Non-palpable",
+      "tmj": "WNL",
+      "swelling": "None"
+    },
+    "intraoral_soft_tissue": "Mucosa pink and stippled; no lesions.",
+    "periodontal": {
+      "summary": "Generalized mild gingivitis; no localized perio defects at #19.",
+      "probing_depths_mm": [],
+      "bop_percent": null,
+      "recession_mm": [],
+      "mobility": [],
+      "furcation": []
+    },
+    "hard_tissue_findings": [
+      {
+        "tooth": 19,
+        "surface": "MOD",
+        "finding": "existing_restoration",
+        "material": "composite",
+        "notes": "Recurrent caries at distal margin"
+      },
+      {
+        "tooth": 19,
+        "surface": "D",
+        "finding": "caries",
+        "material": null,
+        "notes": "Extends close to pulp on radiograph"
+      }
+    ],
+    "occlusion": "Class I; no premature contacts noted.",
+    "diagnostic_tests": {
+      "percussion": [
+        {
+          "tooth": 19,
+          "result": "+"
+        }
+      ],
+      "palpation": [
+        {
+          "tooth": 19,
+          "result": "-"
+        }
+      ],
+      "cold_test": [
+        {
+          "tooth": 19,
+          "result": "lingering"
+        }
+      ],
+      "ept": [],
+      "bite_test": [
+        {
+          "tooth": 19,
+          "result": "+"
+        }
+      ]
+    },
+    "radiographic_findings": "PA #19: deep distal radiolucency approaching pulp chamber; PDL slightly widened apically; no discrete periapical lesion.",
+    "photos_taken": []
+  },
+  "assessment": {
+    "primary_diagnosis": [
+      {
+        "tooth": 19,
+        "diagnosis": "Symptomatic irreversible pulpitis with recurrent caries",
+        "icd10": "K04.02",
+        "prognosis": "fair"
+      }
+    ],
+    "differential": [
+      "Cracked tooth syndrome",
+      "Symptomatic apical periodontitis"
+    ],
+    "contributing_factors": [
+      "Recurrent caries at existing composite margin"
+    ],
+    "risk_assessment": "Moderate caries risk; recommend caries risk protocol at recall."
+  },
+  "plan": {
+    "procedures_today": [
+      {
+        "tooth": 19,
+        "procedure": "Limited oral evaluation - problem focused",
+        "cdt_code": "D0140",
+        "cdt_rationale": "Emergency exam focused on lower left quadrant pain",
+        "materials": null,
+        "anesthesia": null
+      },
+      {
+        "tooth": 19,
+        "procedure": "Periapical radiograph",
+        "cdt_code": "D0220",
+        "cdt_rationale": "Single PA taken of #19 for pulpal/periapical assessment",
+        "materials": null,
+        "anesthesia": null
+      },
+      {
+        "tooth": 19,
+        "procedure": "Palliative treatment - emergency relief",
+        "cdt_code": "D9110",
+        "cdt_rationale": "Sedative dressing placed pending endodontic treatment",
+        "materials": "IRM",
+        "anesthesia": "2% lidocaine 1:100k epi, 1 carpule, IAN block"
+      }
+    ],
+    "procedures_recommended": [
+      {
+        "tooth": 19,
+        "procedure": "Endodontic therapy - molar (excluding final restoration)",
+        "cdt_code": "D3330",
+        "priority": "urgent",
+        "alternatives_discussed": [
+          "Extraction with implant or bridge",
+          "No treatment (not advised)"
+        ]
+      },
+      {
+        "tooth": 19,
+        "procedure": "Crown - porcelain fused to high noble metal",
+        "cdt_code": "D2750",
+        "priority": "soon",
+        "alternatives_discussed": [
+          "Full zirconia crown D2740"
+        ]
+      }
+    ],
+    "prescriptions": [
+      {
+        "drug": "ibuprofen",
+        "dose": "600 mg",
+        "route": "PO",
+        "frequency": "q6h",
+        "duration": "5 days",
+        "quantity": "20 tablets",
+        "refills": 0
+      }
+    ],
+    "patient_education": [
+      "Avoid chewing on lower left until endodontic treatment complete",
+      "Cold/heat sensitivity expected until pulp is removed",
+      "Return immediately if swelling, fever, or worsening pain"
+    ],
+    "informed_consent": {
+      "obtained": true,
+      "risks_benefits_alternatives_discussed": true,
+      "signed_form": true
+    },
+    "referrals": [],
+    "home_care": [
+      "Warm salt water rinses 2-3x daily",
+      "Continue normal brushing/flossing on adjacent teeth"
+    ],
+    "follow_up": {
+      "when": "Within 3-5 days",
+      "purpose": "Initiate endodontic therapy on #19"
+    }
+  },
+  "grounding": {
+    "transcript_spans": [
+      {
+        "field_path": "subjective.chief_complaint",
+        "quote": "I've had this sharp pain on my lower left tooth for about three days, especially with cold drinks.",
+        "line_index": 3
+      },
+      {
+        "field_path": "subjective.hpi.character",
+        "quote": "It's sharp, like a stabbing feeling.",
+        "line_index": 7
+      },
+      {
+        "field_path": "subjective.hpi.severity_0_10",
+        "quote": "It's probably a seven out of ten when it really hits.",
+        "line_index": 9
+      },
+      {
+        "field_path": "subjective.hpi.triggers",
+        "quote": "Cold water makes it spike, and biting down too.",
+        "line_index": 11
+      },
+      {
+        "field_path": "subjective.medications",
+        "quote": "I'm on lisinopril for blood pressure.",
+        "line_index": 13
+      },
+      {
+        "field_path": "subjective.allergies",
+        "quote": "No known drug allergies.",
+        "line_index": 15
+      },
+      {
+        "field_path": "objective.hard_tissue_findings",
+        "quote": "I see recurrent caries at the composite margin on nineteen.",
+        "line_index": 17
+      },
+      {
+        "field_path": "objective.diagnostic_tests.cold_test",
+        "quote": "Okay that cold test is lingering for about 30 seconds on nineteen.",
+        "line_index": 18
+      },
+      {
+        "field_path": "objective.diagnostic_tests.percussion",
+        "quote": "Slight tenderness to percussion on tooth nineteen.",
+        "line_index": 19
+      },
+      {
+        "field_path": "objective.radiographic_findings",
+        "quote": "PA shows deep decay on the distal of nineteen, very close to the nerve.",
+        "line_index": 21
+      },
+      {
+        "field_path": "assessment.primary_diagnosis",
+        "quote": "This is symptomatic irreversible pulpitis on tooth nineteen.",
+        "line_index": 22
+      },
+      {
+        "field_path": "plan.procedures_today",
+        "quote": "Let's place a sedative filling today to settle it down.",
+        "line_index": 24
+      },
+      {
+        "field_path": "plan.procedures_recommended",
+        "quote": "You'll need a root canal on nineteen and then a crown afterwards.",
+        "line_index": 25
+      },
+      {
+        "field_path": "plan.prescriptions",
+        "quote": "I'll write you ibuprofen six hundred milligrams every six hours for five days.",
+        "line_index": 27
+      }
+    ]
+  },
+  "quality_flags": {
+    "unverified_terms": [],
+    "hallucination_risk": [],
+    "missing_required": []
+  },
+  "attestation": {
+    "provider_reviewed": true,
+    "ai_assisted_disclosure": true,
+    "signed_at_iso": "2026-05-30T15:42:11-05:00",
+    "signature_method": "typed_name"
+  }
+}

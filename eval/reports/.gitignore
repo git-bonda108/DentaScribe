@@ -1,0 +1,4 @@
+# Eval reports are timestamped artifacts; only the baseline is tracked.
+eval-*.json
+eval-*.md
+!baseline.json

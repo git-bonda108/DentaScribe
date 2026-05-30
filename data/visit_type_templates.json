@@ -1,0 +1,130 @@
+{
+  "periodic_recall": {
+    "required_objective": [
+      "periodontal.summary",
+      "hard_tissue_findings",
+      "radiographic_findings"
+    ],
+    "cdt_allow_list": [
+      "D0120",
+      "D0150",
+      "D0210",
+      "D0274",
+      "D0277",
+      "D1110",
+      "D1206",
+      "D1208",
+      "D4346"
+    ]
+  },
+  "emergency": {
+    "required_objective": [
+      "diagnostic_tests.percussion",
+      "diagnostic_tests.cold_test",
+      "radiographic_findings"
+    ],
+    "cdt_allow_list": [
+      "D0140",
+      "D0220",
+      "D0230",
+      "D9110",
+      "D3220",
+      "D3221",
+      "D7140",
+      "D7210",
+      "D3310",
+      "D3320",
+      "D3330",
+      "D2740",
+      "D2750",
+      "D2752"
+    ]
+  },
+  "emergency_limited": {
+    "required_objective": [
+      "diagnostic_tests.percussion",
+      "diagnostic_tests.cold_test",
+      "radiographic_findings"
+    ],
+    "cdt_allow_list": [
+      "D0140",
+      "D0220",
+      "D0230",
+      "D9110",
+      "D3220",
+      "D3221",
+      "D7140",
+      "D7210"
+    ]
+  },
+  "restorative_direct": {
+    "required_objective": [
+      "hard_tissue_findings"
+    ],
+    "cdt_allow_list": [
+      "D2330",
+      "D2331",
+      "D2332",
+      "D2335",
+      "D2391",
+      "D2392",
+      "D2393",
+      "D2394",
+      "D2140",
+      "D2150",
+      "D2160",
+      "D2161",
+      "D0461"
+    ]
+  },
+  "endodontic": {
+    "required_objective": [
+      "diagnostic_tests.cold_test",
+      "diagnostic_tests.percussion",
+      "radiographic_findings"
+    ],
+    "cdt_allow_list": [
+      "D3310",
+      "D3320",
+      "D3330",
+      "D3346",
+      "D3347",
+      "D3348",
+      "D3221",
+      "D3222"
+    ]
+  },
+  "periodontal_hygiene": {
+    "required_objective": [
+      "periodontal.probing_depths_mm",
+      "periodontal.bop_percent"
+    ],
+    "cdt_allow_list": [
+      "D1110",
+      "D4341",
+      "D4342",
+      "D4910",
+      "D4346",
+      "D4355",
+      "D1206",
+      "D1208"
+    ]
+  },
+  "restorative_indirect": {
+    "required_objective": [
+      "hard_tissue_findings",
+      "occlusion"
+    ],
+    "cdt_allow_list": [
+      "D2740",
+      "D2750",
+      "D2752",
+      "D2790",
+      "D2950",
+      "D2952",
+      "D2954",
+      "D6740",
+      "D6750"
+    ]
+  }
+}

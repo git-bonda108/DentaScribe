@@ -1,0 +1,424 @@
+{
+  "fixtures": [
+    {
+      "fixture_id": "demo-001",
+      "patient_name": "Riya Sharma",
+      "metrics": [
+        {
+          "name": "entity_recall",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "tooth:Tooth 3",
+              "condition:cavity",
+              "procedure:composite restoration",
+              "procedure:periapical x-ray",
+              "medication:ibuprofen"
+            ],
+            "misses": [],
+            "found_total": 30,
+            "required_total": 5
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "entity_precision",
+          "score": 0.767,
+          "is_rate": true,
+          "detail": {
+            "accounted": 23,
+            "unaccounted": [
+              "anatomy:molar",
+              "anatomy:crown",
+              "anatomy:root",
+              "symptom:pain with biting",
+              "condition:chip on the buccal cusp",
+              "anatomy:gums",
+              "condition:penicillin allergy"
+            ],
+            "unaccounted_count": 7
+          },
+          "threshold": 0.4,
+          "passed": true
+        },
+        {
+          "name": "cdt_recall_at_k",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "D0220@1"
+            ],
+            "misses": [],
+            "found": [
+              "D0220",
+              "D2393",
+              "D3330",
+              "D2394",
+              "D2750",
+              "D4346",
+              "D4342",
+              "D3310"
+            ]
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "cdt_forbidden_count",
+          "score": 0.0,
+          "is_rate": false,
+          "detail": {
+            "violations": []
+          },
+          "threshold": 0,
+          "passed": true
+        },
+        {
+          "name": "soap_completeness",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "present": [
+              "chief_complaint",
+              "subjective",
+              "objective",
+              "assessment",
+              "plan"
+            ],
+            "missing": [],
+            "validator_score": 1.0
+          },
+          "threshold": 1.0,
+          "passed": true
+        },
+        {
+          "name": "soap_keyword_coverage",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": 3,
+            "total": 3,
+            "misses": []
+          },
+          "threshold": 0.7,
+          "passed": true
+        },
+        {
+          "name": "medication_coverage",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "ibuprofen"
+            ],
+            "misses": []
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "hallucination_count",
+          "score": 0.0,
+          "is_rate": false,
+          "detail": {
+            "terms": []
+          },
+          "threshold": 5.0,
+          "passed": true
+        }
+      ],
+      "signability_score": 0.988,
+      "passed": true,
+      "errors": [],
+      "duration_ms": 27397
+    },
+    {
+      "fixture_id": "demo-002",
+      "patient_name": "Marcus Lee",
+      "metrics": [
+        {
+          "name": "entity_recall",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "condition:gingivitis",
+              "condition:calculus",
+              "procedure:scaling",
+              "procedure:periodontal maintenance",
+              "procedure:cleaning",
+              "procedure:extraction",
+              "anatomy:third molar"
+            ],
+            "misses": [],
+            "found_total": 23,
+            "required_total": 7
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "entity_precision",
+          "score": 0.696,
+          "is_rate": true,
+          "detail": {
+            "accounted": 16,
+            "unaccounted": [
+              "condition:operculum",
+              "anatomy:lingual",
+              "tooth:lower front teeth",
+              "anatomy:lingual surfaces of the lower anteriors",
+              "symptom:sore wisdom tooth",
+              "tooth:lower left third molar",
+              "condition:partial eruption with operculum"
+            ],
+            "unaccounted_count": 7
+          },
+          "threshold": 0.4,
+          "passed": true
+        },
+        {
+          "name": "cdt_recall_at_k",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "D4346@3",
+              "D4910@1"
+            ],
+            "misses": [],
+            "found": [
+              "D4910",
+              "D0120",
+              "D4346",
+              "D7220",
+              "D0150",
+              "D4341",
+              "D2332",
+              "D2335"
+            ]
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "cdt_forbidden_count",
+          "score": 0.0,
+          "is_rate": false,
+          "detail": {
+            "violations": []
+          },
+          "threshold": 0,
+          "passed": true
+        },
+        {
+          "name": "soap_completeness",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "present": [
+              "chief_complaint",
+              "subjective",
+              "objective",
+              "assessment",
+              "plan"
+            ],
+            "missing": [],
+            "validator_score": 1.0
+          },
+          "threshold": 1.0,
+          "passed": true
+        },
+        {
+          "name": "soap_keyword_coverage",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": 2,
+            "total": 2,
+            "misses": []
+          },
+          "threshold": 0.7,
+          "passed": true
+        },
+        {
+          "name": "medication_coverage",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "expected": 0
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "hallucination_count",
+          "score": 0.0,
+          "is_rate": false,
+          "detail": {
+            "terms": []
+          },
+          "threshold": 5.0,
+          "passed": true
+        }
+      ],
+      "signability_score": 0.985,
+      "passed": true,
+      "errors": [],
+      "duration_ms": 23863
+    },
+    {
+      "fixture_id": "demo-003",
+      "patient_name": "Sofia Garcia",
+      "metrics": [
+        {
+          "name": "entity_recall",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "tooth:Tooth 9",
+              "condition:fracture",
+              "procedure:cracked-tooth testing",
+              "procedure:composite",
+              "procedure:night guard"
+            ],
+            "misses": [],
+            "found_total": 21,
+            "required_total": 5
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "entity_precision",
+          "score": 0.619,
+          "is_rate": true,
+          "detail": {
+            "accounted": 13,
+            "unaccounted": [
+              "anatomy:incisor",
+              "anatomy:pulp",
+              "anatomy:crown",
+              "symptom:broken tooth",
+              "symptom:grinding",
+              "anatomy:upper left central incisor",
+              "condition:no pulp exposure",
+              "condition:grinding"
+            ],
+            "unaccounted_count": 8
+          },
+          "threshold": 0.4,
+          "passed": true
+        },
+        {
+          "name": "cdt_recall_at_k",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": [
+              "D0461@1"
+            ],
+            "misses": [],
+            "found": [
+              "D0461",
+              "D2335",
+              "D9944",
+              "D2330",
+              "D2391",
+              "D2750",
+              "D9110",
+              "D0120"
+            ]
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "cdt_forbidden_count",
+          "score": 0.0,
+          "is_rate": false,
+          "detail": {
+            "violations": []
+          },
+          "threshold": 0,
+          "passed": true
+        },
+        {
+          "name": "soap_completeness",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "present": [
+              "chief_complaint",
+              "subjective",
+              "objective",
+              "assessment",
+              "plan"
+            ],
+            "missing": [],
+            "validator_score": 1.0
+          },
+          "threshold": 1.0,
+          "passed": true
+        },
+        {
+          "name": "soap_keyword_coverage",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "hits": 1,
+            "total": 1,
+            "misses": []
+          },
+          "threshold": 0.7,
+          "passed": true
+        },
+        {
+          "name": "medication_coverage",
+          "score": 1.0,
+          "is_rate": true,
+          "detail": {
+            "expected": 0
+          },
+          "threshold": 0.8,
+          "passed": true
+        },
+        {
+          "name": "hallucination_count",
+          "score": 1.0,
+          "is_rate": false,
+          "detail": {
+            "terms": [
+              "assessment: 'habit'"
+            ]
+          },
+          "threshold": 5.0,
+          "passed": true
+        }
+      ],
+      "signability_score": 0.973,
+      "passed": true,
+      "errors": [],
+      "duration_ms": 28024
+    }
+  ],
+  "aggregate": {
+    "entity_recall": 1.0,
+    "entity_precision": 0.694,
+    "cdt_recall_at_k": 1.0,
+    "cdt_forbidden_count": 0.0,
+    "soap_completeness": 1.0,
+    "soap_keyword_coverage": 1.0,
+    "medication_coverage": 1.0,
+    "hallucination_count": 0.333,
+    "signability_score": 0.982
+  },
+  "passed": true,
+  "llm_provider": "anthropic",
+  "git_sha": "unknown",
+  "timestamp": "2026-05-19T13:57:54.493982Z"
+}

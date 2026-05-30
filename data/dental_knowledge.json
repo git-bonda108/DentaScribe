@@ -1,0 +1,290 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source": "Consolidated dental knowledge corpus for DentaScribe grounding + RAG.",
+    "note": "Combines ADA CDT 2026 nomenclature, dental terminology, anatomy (Universal numbering 1-32), pharmacology, and clinical writing scaffolding. The `terms` list is the validator's allow-list; `chunks` are RAG-searchable.",
+    "license": "Terminology compiled from public ADA CDT references + standard dental anatomy."
+  },
+
+  "terms": [
+    "caries", "carious", "cariogenic", "cavity", "cavities", "decay", "decayed",
+    "lesion", "lesions", "demineralization", "remineralization", "demineralized",
+    "pulpitis", "pulpal", "pulp", "pulpotomy", "pulpectomy", "pulp-cap", "pulp-capping",
+    "irreversible", "reversible", "necrotic", "necrosis", "vital", "non-vital", "nonvital",
+    "gingivitis", "gingival", "gingiva", "gingivae", "gum", "gums", "gum-line",
+    "periodontitis", "periodontal", "periodontium", "perio",
+    "abscess", "abscessed", "abscesses", "fistula", "draining", "swelling", "swollen",
+    "fracture", "fractured", "fracturing", "crack", "cracked", "cracks", "cracking",
+    "chip", "chipped", "chipping", "broken", "fragment", "incomplete-fracture",
+    "calculus", "tartar", "plaque", "biofilm", "supra-gingival", "sub-gingival",
+    "subgingival", "supragingival",
+    "malocclusion", "occlusion", "occlusal", "occluding", "interocclusal", "open-bite",
+    "crossbite", "overjet", "overbite", "deep-bite", "edge-to-edge",
+    "bruxism", "bruxing", "grinding", "clenching", "parafunctional", "parafunction",
+    "tmj", "tmd", "temporomandibular", "myofascial", "joint",
+    "xerostomia", "dry-mouth", "halitosis", "operculum", "pericoronitis",
+    "impaction", "impacted", "partially-erupted", "erupted", "eruption",
+    "erosion", "erosive", "abrasion", "abraded", "attrition", "abfraction",
+
+    "prophylaxis", "prophy", "cleaning", "cleanings", "scale", "scaled", "scaling",
+    "root-planing", "planing", "deep-cleaning", "debridement", "debrided",
+    "composite", "composites", "filling", "fillings", "restoration", "restorations",
+    "restorative", "restored", "restore", "amalgam", "amalgams",
+    "crown", "crowns", "crowned", "veneer", "veneers", "veneered", "onlay", "onlays",
+    "inlay", "inlays", "bridge", "bridges", "pontic", "abutment", "abutments",
+    "implant", "implants", "implant-supported", "denture", "dentures", "partial",
+    "removable", "fixed", "complete-denture",
+    "root-canal", "endo", "endodontic", "endodontics", "endodontically", "rct",
+    "obturation", "obturated", "instrumentation", "irrigation", "irrigant",
+    "extraction", "extractions", "extracted", "extracting", "exodontia",
+    "surgical-extraction", "alveoloplasty", "alveolectomy", "ridge-augmentation",
+    "sealant", "sealants", "sealed", "fluoride", "fluoridated", "fluoride-varnish",
+    "varnish", "topical", "sdf", "silver-diamine-fluoride",
+    "periodontal-maintenance", "maintenance", "recall", "recall-visit", "supportive-care",
+    "occlusal-guard", "night-guard", "nightguard", "splint", "deprogrammer",
+    "panoramic", "pano", "bitewing", "bitewings", "bwx", "periapical", "pa",
+    "fmx", "x-ray", "x-rays", "radiograph", "radiographs", "radiographic", "imaging",
+    "cbct", "intraoral", "extraoral",
+    "saliva-test", "saliva-testing", "salivary", "cracked-tooth", "cracked-tooth-testing",
+    "tooth-slooth", "transillumination", "percussion", "palpation", "probing",
+    "pocket-depth", "pocket", "pockets", "probing-depth", "recession", "mobility",
+    "furcation", "bone-loss", "attachment-loss", "cal", "clinical-attachment-loss",
+    "scaling-and-root-planing", "srp", "gingivectomy", "gingivoplasty", "frenectomy",
+    "biopsy", "incisional-biopsy", "excisional-biopsy",
+    "anesthesia", "anesthetic", "anesthetized", "local-anesthesia",
+    "infiltration", "block", "mandibular-block", "ian", "inferior-alveolar",
+    "nitrous", "sedation", "conscious-sedation", "general-anesthesia",
+    "consult", "consultation", "consults", "consulted", "referral", "referred",
+    "evaluation", "evaluate", "evaluated", "evaluations", "assessment", "assessed",
+    "examination", "examine", "examined", "exam", "exams", "screening", "screenings",
+    "purulent", "discharge", "exudate", "suppuration", "drainage", "draining",
+    "palpation", "palpated", "percussion", "percussed", "transillumination",
+    "vitality", "vital", "non-vital", "nonvital", "vitality-testing",
+    "definitive", "definitively", "tentative", "tentatively", "provisional",
+    "fabrication", "fabricate", "fabricated", "fabricating", "denies", "denied",
+    "localized", "generalized", "circumscribed", "diffuse",
+    "consistent-with", "compatible-with", "favors", "rules-out",
+    "denies", "endorses", "describes", "characterizes",
+
+    "ibuprofen", "advil", "motrin", "naproxen", "aleve", "acetaminophen", "tylenol",
+    "paracetamol", "aspirin", "asa",
+    "amoxicillin", "augmentin", "clindamycin", "azithromycin", "z-pak", "doxycycline",
+    "metronidazole", "penicillin",
+    "chlorhexidine", "chx", "peridex",
+    "lidocaine", "articaine", "septocaine", "mepivacaine", "carbocaine", "bupivacaine",
+    "marcaine", "prilocaine",
+    "nitrous-oxide", "fluoride-rinse", "act-rinse",
+    "mg", "mcg", "ml", "milligram", "milligrams",
+
+    "incisor", "incisors", "canine", "canines", "cuspid", "cuspids",
+    "premolar", "premolars", "bicuspid", "bicuspids", "molar", "molars",
+    "wisdom-tooth", "wisdom", "third-molar", "third-molars",
+    "primary", "permanent", "deciduous", "succedaneous",
+    "enamel", "dentin", "dentine", "cementum", "periodontium", "periapical",
+    "apex", "apical", "coronal", "cervical", "furcal",
+    "alveolar", "alveolus", "alveolar-bone", "mandible", "mandibular",
+    "maxilla", "maxillary", "palate", "palatal", "hard-palate", "soft-palate",
+    "vestibule", "frenum", "frenulum",
+    "buccal", "labial", "lingual", "facial", "mesial", "distal", "incisal",
+    "anterior", "anteriors", "posterior", "posteriors",
+    "crown", "root", "roots", "apex", "cusp", "cusps", "fossa", "groove",
+    "marginal-ridge", "contact", "contacts", "interproximal",
+    "quadrant", "quadrants", "sextant", "arch", "upper-arch", "lower-arch",
+
+    "upper-right", "upper-left", "lower-right", "lower-left",
+    "ur", "ul", "lr", "ll", "tooth", "teeth", "no", "number",
+
+    "pain", "painful", "ache", "aching", "discomfort", "tender", "tenderness",
+    "sensitivity", "sensitive", "sharp", "dull", "throbbing", "spontaneous",
+    "elicited", "evoked", "lingering", "intermittent", "constant",
+    "cold", "hot", "thermal", "sweet", "biting", "chewing", "pressure",
+    "bleeding", "bleeds", "swelling", "swollen", "tenderness", "drainage",
+    "looseness", "mobility", "click", "clicking", "popping", "locking",
+
+    "findings", "finding", "observed", "noted", "noting", "noticed", "noticeable",
+    "stated", "reports", "reported", "reporting", "presents", "presenting",
+    "presented", "presentation", "discussed", "discussing", "advised", "recommended",
+    "recommends", "recommendation", "interventions", "intervention", "plan", "planned",
+    "planning", "follow-up", "followup", "scheduled", "scheduling", "appointment",
+    "appointments", "today", "tomorrow", "next-week", "later", "concurrent",
+    "concurrently", "subsequently", "subsequent", "pending", "contingent",
+    "conditional", "tentative", "working", "diagnosis", "differential", "rule-out",
+    "ruled-out", "impression", "impressions", "involvement", "involved", "involves",
+    "approach", "approaches", "approximately", "approximate", "estimated",
+
+    "soap", "subjective", "objective", "assessment", "plan",
+    "chief", "complaint", "history", "past", "medical", "dental",
+    "social", "family", "review", "systems", "vital",
+    "remarks", "remark", "scaffolding", "scaffold",
+
+    "patient", "doctor", "dentist", "hygienist", "assistant",
+    "rx", "prescription", "prescribe", "prescribed", "as-needed", "prn",
+    "bid", "tid", "qid", "qd", "qod", "stat", "po", "tab", "tablet",
+    "mg", "mcg", "ml", "g", "cc", "u",
+
+    "year", "years", "month", "months", "week", "weeks", "day", "days",
+    "hour", "hours", "minute", "minutes",
+    "mild", "moderate", "severe", "early", "late", "stage",
+    "good", "fair", "poor", "questionable", "guarded"
+  ],
+
+  "abbreviations": {
+    "FMX": "Full mouth radiographic series — complete intraoral X-rays",
+    "BWX": "Bitewing radiographs",
+    "PA": "Periapical radiograph",
+    "RCT": "Root canal therapy / Endodontic therapy",
+    "SRP": "Scaling and root planing",
+    "CAL": "Clinical attachment loss",
+    "PD": "Probing depth / pocket depth",
+    "BOP": "Bleeding on probing",
+    "CHX": "Chlorhexidine antimicrobial rinse",
+    "TMD": "Temporomandibular disorder",
+    "TMJ": "Temporomandibular joint",
+    "IAN": "Inferior alveolar nerve",
+    "NV": "Non-vital",
+    "PRN": "As needed (pro re nata)",
+    "BID": "Twice daily",
+    "TID": "Three times daily",
+    "QID": "Four times daily",
+    "SDF": "Silver diamine fluoride",
+    "CDT": "Code on Dental Procedures and Nomenclature (ADA)",
+    "FDI": "Fédération Dentaire Internationale (two-digit tooth numbering)",
+    "UR": "Upper right quadrant",
+    "UL": "Upper left quadrant",
+    "LR": "Lower right quadrant",
+    "LL": "Lower left quadrant"
+  },
+
+  "tooth_word_to_number": {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+    "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+    "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
+    "twenty-one": 21, "twenty-two": 22, "twenty-three": 23, "twenty-four": 24,
+    "twenty-five": 25, "twenty-six": 26, "twenty-seven": 27, "twenty-eight": 28,
+    "twenty-nine": 29, "thirty": 30, "thirty-one": 31, "thirty-two": 32
+  },
+
+  "chunks": [
+    {
+      "id": "tooth-numbering",
+      "category": "anatomy",
+      "tags": ["numbering", "universal", "fdi"],
+      "text": "Universal Numbering System: 1-16 maxillary (upper) from right third molar to left third molar; 17-32 mandibular (lower) from left third molar to right third molar. Tooth 1=upper right third molar, 3=upper right first molar, 8=upper right central incisor, 9=upper left central incisor, 14=upper left first molar, 17=lower left third molar, 19=lower left first molar, 30=lower right first molar, 32=lower right third molar. FDI uses two-digit codes 11-48."
+    },
+    {
+      "id": "surfaces",
+      "category": "anatomy",
+      "tags": ["surfaces"],
+      "text": "Tooth surfaces: Mesial (M) toward midline, Distal (D) away from midline, Buccal/Facial (B/F) cheek side, Lingual (L) tongue side, Occlusal (O) chewing surface of posterior teeth, Incisal (I) biting edge of anterior teeth, Palatal for upper lingual."
+    },
+    {
+      "id": "caries-classes",
+      "category": "condition",
+      "tags": ["caries", "decay"],
+      "text": "Caries (synonyms: cavity, decay, carious lesion). Severity progresses through enamel → dentin → pulp. Class I-VI describe location: Class I pits and fissures of posteriors; Class II posterior proximal involving marginal ridge; Class III anterior proximal; Class IV anterior proximal with incisal angle; Class V cervical third; Class VI cusp tip / incisal edge."
+    },
+    {
+      "id": "periodontal-staging",
+      "category": "condition",
+      "tags": ["periodontitis", "perio"],
+      "text": "Periodontal disease: Gingivitis (reversible inflammation, BOP, no attachment loss) → Periodontitis (irreversible attachment loss, pocketing, bone loss). 2018 staging: Stage I-IV by severity, Grade A-C by progression rate. Probing depths >3mm indicate pocketing; BOP indicates active inflammation."
+    },
+    {
+      "id": "pulpal-dx",
+      "category": "condition",
+      "tags": ["endo", "pulp"],
+      "text": "Pulpal diagnoses: Normal pulp; Reversible pulpitis (transient cold sensitivity, no lingering); Irreversible pulpitis (spontaneous or lingering pain); Pulp necrosis (non-vital, no response). Periapical: Normal; Symptomatic apical periodontitis; Asymptomatic apical periodontitis; Acute/chronic apical abscess."
+    },
+    {
+      "id": "cracked-tooth",
+      "category": "condition",
+      "tags": ["crack", "fracture", "d0461"],
+      "text": "Cracked tooth syndrome: incomplete fracture of vital posterior tooth, sharp pain on bite-release. Diagnosed via Tooth Slooth, transillumination, dye, percussion. CDT 2026 D0461 — Cracked-tooth testing (NEW code 2026). Treatment: full-coverage crown if pulp is vital; RCT + crown if pulpal involvement."
+    },
+    {
+      "id": "saliva-testing",
+      "category": "procedure",
+      "tags": ["d0426", "diagnostic"],
+      "text": "Point-of-care saliva testing — CDT 2026 D0426 (NEW code 2026). In-office salivary diagnostics for caries risk assessment, bacterial load, pH, buffering capacity. Used in caries-risk patients and xerostomia evaluation."
+    },
+    {
+      "id": "composite-restoration",
+      "category": "procedure",
+      "tags": ["restorative", "composite", "filling"],
+      "text": "Resin-based composite restoration (tooth-colored filling). CDT codes by location and surfaces: Anterior D2330 (1 surface), D2331 (2), D2332 (3), D2335 (4+ or incisal angle). Posterior D2391 (1), D2392 (2), D2393 (3), D2394 (4+). Amalgam alternatives D2140-D2150. Indicated for caries removal, fracture restoration, replacement of failing restorations."
+    },
+    {
+      "id": "endodontic-therapy",
+      "category": "procedure",
+      "tags": ["endo", "rct", "root-canal"],
+      "text": "Endodontic therapy (root canal) — cleans and obturates the pulp canal system. CDT D3310 anterior, D3320 premolar, D3330 molar (excluding final restoration). Indicated for irreversible pulpitis, necrosis, apical pathology. Always followed by definitive restoration (crown for posteriors due to fracture risk; composite or crown for anteriors)."
+    },
+    {
+      "id": "crowns",
+      "category": "procedure",
+      "tags": ["restorative", "crown", "prosthodontic"],
+      "text": "Full-coverage crown restoration. Materials: porcelain/ceramic (D2740), porcelain fused to high noble metal (D2750), full metal high noble (D2790), zirconia. Indicated post-endo on posteriors, fractured teeth, large failing restorations, cosmetic improvement of anteriors."
+    },
+    {
+      "id": "veneers",
+      "category": "procedure",
+      "tags": ["restorative", "veneer", "cosmetic"],
+      "text": "Labial veneer — thin shell bonded to facial surface of anteriors for esthetic improvement. CDT D2960 chairside resin, D2962 porcelain laboratory. Indicated for fractured/chipped anteriors, discoloration, diastema closure. Less destructive than full crowns."
+    },
+    {
+      "id": "scaling-root-planing",
+      "category": "procedure",
+      "tags": ["perio", "scaling", "srp"],
+      "text": "Periodontal scaling and root planing (SRP, deep cleaning). CDT D4341 four or more teeth per quadrant; D4342 one to three teeth per quadrant. D4346 scaling in presence of generalized moderate-severe gingival inflammation (full mouth, when staging does not yet meet periodontitis). Indicated for periodontitis. Distinct from prophylaxis (D1110)."
+    },
+    {
+      "id": "prophylaxis",
+      "category": "procedure",
+      "tags": ["preventive", "cleaning", "prophy"],
+      "text": "Prophylaxis — routine dental cleaning, removes plaque/calculus/stain. CDT D1110 adult, D1120 child. Distinct from SRP (which is therapeutic for active perio disease). Periodontal maintenance D4910 follows initial SRP."
+    },
+    {
+      "id": "extractions",
+      "category": "procedure",
+      "tags": ["surgery", "extraction"],
+      "text": "Extractions: D7140 erupted tooth simple; D7210 erupted requiring bone removal or sectioning (surgical). Impacted thirds: D7220 soft-tissue impaction, D7230 partial bony, D7240 complete bony. Pericoronitis around partially-erupted thirds is a common indication."
+    },
+    {
+      "id": "occlusal-guard",
+      "category": "procedure",
+      "tags": ["bruxism", "guard", "splint"],
+      "text": "Occlusal guard (night guard, bite splint). CDT D9944 hard appliance full arch; D9945 soft appliance full arch. Indicated for bruxism, TMD, post-orthodontic retention, sleep clenching. Custom-fitted to opposing arch."
+    },
+    {
+      "id": "radiographs",
+      "category": "procedure",
+      "tags": ["imaging", "x-ray", "diagnostic"],
+      "text": "Radiographs: D0220 first periapical (PA), D0230 each additional PA, D0274 four bitewings (BWX), D0210 full mouth series (FMX, 18-20 films), D0330 panoramic (pano). Periapicals show full root + apex; bitewings show crowns + interproximal caries + bone crests; panoramic shows full jaws + sinuses + TMJ."
+    },
+    {
+      "id": "evaluations",
+      "category": "procedure",
+      "tags": ["evaluation", "exam", "diagnostic"],
+      "text": "Oral evaluations: D0120 periodic established patient; D0140 limited problem-focused (emergency); D0150 comprehensive new or established. Required before treatment planning."
+    },
+    {
+      "id": "dental-pharmacology",
+      "category": "pharmacology",
+      "tags": ["medications", "rx"],
+      "text": "Common dental medications: Analgesics — ibuprofen 400-600mg PO q4-6h PRN (NSAID, first-line), acetaminophen 500-1000mg PO q4-6h PRN, naproxen 220-440mg PO q12h. Antibiotics — amoxicillin 500mg PO TID 7d (first-line for dental infection; AVOID in penicillin allergy), clindamycin 300mg PO QID 7d (PCN-allergic alternative), azithromycin. Topical — chlorhexidine 0.12% rinse BID. Local anesthetics — lidocaine 2% with 1:100k epi, articaine 4% with epi."
+    },
+    {
+      "id": "pcn-allergy",
+      "category": "safety",
+      "tags": ["allergy", "antibiotic", "safety"],
+      "text": "Penicillin allergy: PCN, amoxicillin, ampicillin, augmentin are contraindicated. Alternatives: clindamycin 300mg PO QID, azithromycin 500mg day 1 then 250mg days 2-5, doxycycline 100mg BID. Always confirm allergy history before prescribing antibiotics."
+    },
+    {
+      "id": "soap-structure",
+      "category": "scaffolding",
+      "tags": ["soap", "note"],
+      "text": "SOAP note structure: Subjective (patient-reported history, chief complaint, HPI); Objective (clinical findings, vitals, exam, imaging); Assessment (working diagnoses, differential); Plan (treatment, prescriptions, follow-up, referrals). DentaScribe adds Dental Exam Findings (charting-style), Medications, Follow-up, and Notes for Doctor (uncertainties to confirm)."
+    }
+  ]
+}

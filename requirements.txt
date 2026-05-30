@@ -1,0 +1,16 @@
+streamlit>=1.36.0
+streamlit-mic-recorder>=0.0.8
+pandas>=2.2.0
+python-dotenv>=1.0.1
+anthropic>=0.40.0
+openai>=1.40.0
+reportlab>=4.2.0
+python-docx>=1.1.2
+pydub>=0.25.1
+plotly>=5.22.0
+
+# Audio preprocessing for STT robustness (muffled / distant / noisy capture)
+scipy>=1.10.0
+noisereduce>=3.0.0
+numpy>=1.26.0
+jsonschema>=4.22.0

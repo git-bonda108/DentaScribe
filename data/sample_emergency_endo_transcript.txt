@@ -1,0 +1,28 @@
+Doctor: Good morning, I'm Dr. Patel. What brings you in today?
+Patient: Hi doctor.
+Doctor: Tell me about the problem.
+Patient: I've had this sharp pain on my lower left tooth for about three days, especially with cold drinks.
+Doctor: When did it start?
+Patient: About three days ago.
+Doctor: How would you describe the pain?
+Patient: It's sharp, like a stabbing feeling.
+Doctor: On a scale of zero to ten?
+Patient: It's probably a seven out of ten when it really hits.
+Doctor: What makes it worse?
+Patient: Cold water makes it spike, and biting down too.
+Doctor: Any medical changes?
+Patient: No new conditions. I'm on lisinopril for blood pressure.
+Doctor: Any drug allergies?
+Patient: No known drug allergies.
+Doctor: Let me examine tooth nineteen.
+Doctor: I see recurrent caries at the composite margin on nineteen.
+Doctor: Okay that cold test is lingering for about 30 seconds on nineteen.
+Doctor: Slight tenderness to percussion on tooth nineteen.
+Doctor: Let me take a PA.
+Doctor: PA shows deep decay on the distal of nineteen, very close to the nerve.
+Doctor: This is symptomatic irreversible pulpitis on tooth nineteen.
+Doctor: We'll do an emergency exam and radiograph today.
+Doctor: Let's place a sedative filling today to settle it down.
+Doctor: You'll need a root canal on nineteen and then a crown afterwards.
+Doctor: For pain control at home.
+Doctor: I'll write you ibuprofen six hundred milligrams every six hours for five days.

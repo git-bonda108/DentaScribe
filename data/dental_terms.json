@@ -1,0 +1,74 @@
+{
+  "_meta": "Curated dental terminology bank used for offline NER and validation. Universal Numbering System (1-32) + descriptors.",
+  "teeth_universal": {
+    "1": "Upper right third molar (wisdom)",
+    "2": "Upper right second molar",
+    "3": "Upper right first molar",
+    "4": "Upper right second premolar",
+    "5": "Upper right first premolar",
+    "6": "Upper right canine",
+    "7": "Upper right lateral incisor",
+    "8": "Upper right central incisor",
+    "9": "Upper left central incisor",
+    "10": "Upper left lateral incisor",
+    "11": "Upper left canine",
+    "12": "Upper left first premolar",
+    "13": "Upper left second premolar",
+    "14": "Upper left first molar",
+    "15": "Upper left second molar",
+    "16": "Upper left third molar (wisdom)",
+    "17": "Lower left third molar (wisdom)",
+    "18": "Lower left second molar",
+    "19": "Lower left first molar",
+    "20": "Lower left second premolar",
+    "21": "Lower left first premolar",
+    "22": "Lower left canine",
+    "23": "Lower left lateral incisor",
+    "24": "Lower left central incisor",
+    "25": "Lower right central incisor",
+    "26": "Lower right lateral incisor",
+    "27": "Lower right canine",
+    "28": "Lower right first premolar",
+    "29": "Lower right second premolar",
+    "30": "Lower right first molar",
+    "31": "Lower right second molar",
+    "32": "Lower right third molar (wisdom)"
+  },
+  "conditions": [
+    "caries", "cavity", "decay", "pulpitis", "gingivitis", "periodontitis",
+    "abscess", "fracture", "crack", "chipped tooth", "fistula", "calculus",
+    "tartar", "plaque", "malocclusion", "bruxism", "TMJ disorder",
+    "xerostomia", "halitosis", "operculum", "pericoronitis",
+    "impaction", "erosion", "abrasion", "attrition", "abfraction"
+  ],
+  "procedures": [
+    "prophylaxis", "cleaning", "scaling", "root planing", "scaling and root planing",
+    "composite", "filling", "restoration", "amalgam",
+    "crown", "veneer", "bridge", "implant", "denture",
+    "root canal", "endodontic therapy", "pulp cap", "pulpotomy",
+    "extraction", "surgical extraction", "third molar extraction",
+    "sealant", "fluoride", "fluoride varnish",
+    "periodontal maintenance", "deep cleaning",
+    "occlusal guard", "night guard",
+    "panoramic", "bitewing", "periapical", "x-ray", "radiograph",
+    "saliva test", "cracked tooth test"
+  ],
+  "medications": [
+    "ibuprofen", "acetaminophen", "amoxicillin", "clindamycin", "azithromycin",
+    "chlorhexidine", "lidocaine", "articaine", "nitrous oxide",
+    "naproxen", "tylenol", "advil", "motrin"
+  ],
+  "anatomy": [
+    "incisor", "canine", "premolar", "molar", "wisdom tooth", "third molar",
+    "enamel", "dentin", "pulp", "cementum", "periodontium",
+    "gingiva", "gum", "alveolar bone", "mandible", "maxilla",
+    "buccal", "lingual", "mesial", "distal", "occlusal", "incisal", "palatal",
+    "anterior", "posterior", "crown", "root", "apex", "cusp"
+  ],
+  "symptom_phrases": [
+    "sharp pain", "dull ache", "throbbing", "sensitivity to cold", "sensitivity to hot",
+    "pain when biting", "bleeding gums", "swelling", "bad breath",
+    "loose tooth", "broken tooth", "chipped tooth", "jaw pain", "headache",
+    "clicking jaw", "grinding"
+  ]
+}

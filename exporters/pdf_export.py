@@ -1,0 +1,123 @@
+"""PDF export — clinical-grade layout using ReportLab."""
+from io import BytesIO
+from typing import Dict, Any
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+)
+
+
+TEAL  = colors.HexColor("#0EA5A4")
+NAVY  = colors.HexColor("#0B2A4A")
+MUTED = colors.HexColor("#64748B")
+
+
+def _styles():
+    base = getSampleStyleSheet()
+    body = ParagraphStyle("body", parent=base["BodyText"],
+                          fontName="Helvetica", fontSize=10, leading=14,
+                          textColor=colors.HexColor("#1E2327"))
+    h1 = ParagraphStyle("h1", parent=base["Heading1"],
+                        fontName="Helvetica-Bold", fontSize=18, leading=22,
+                        textColor=NAVY, spaceAfter=4)
+    h3 = ParagraphStyle("h3", parent=base["Heading3"],
+                        fontName="Helvetica-Bold", fontSize=10, leading=14,
+                        textColor=TEAL, spaceBefore=10, spaceAfter=3,
+                        textTransform="uppercase")
+    muted = ParagraphStyle("muted", parent=body, textColor=MUTED, fontSize=9)
+    return body, h1, h3, muted
+
+
+def render_pdf(state: Dict[str, Any]) -> bytes:
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=LETTER,
+                            leftMargin=0.7 * inch, rightMargin=0.7 * inch,
+                            topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+                            title="DentaScribe — Consultation Note")
+    body, h1, h3, muted = _styles()
+    soap = state.get("soap", {})
+    cdt  = state.get("cdt_codes", []) or []
+
+    story = []
+    story.append(Paragraph("DentaScribe Consultation Note", h1))
+    story.append(Paragraph(
+        f"Patient: <b>{state.get('patient_name','—')}</b> &nbsp;|&nbsp; "
+        f"Provider: {state.get('doctor_name','—')} &nbsp;|&nbsp; "
+        f"Date: {state.get('created_at','—')[:19].replace('T',' ')}",
+        muted,
+    ))
+    story.append(HRFlowable(width="100%", thickness=0.8, color=TEAL,
+                            spaceBefore=8, spaceAfter=10))
+
+    def section(title: str, text: str):
+        if not text:
+            return
+        story.append(Paragraph(title, h3))
+        story.append(Paragraph(text.replace("\n", "<br/>"), body))
+
+    section("Chief Complaint", soap.get("chief_complaint", ""))
+    section("Subjective", soap.get("subjective", ""))
+    section("Objective", soap.get("objective", ""))
+    section("Dental Examination Findings", soap.get("dental_exam", ""))
+    section("Assessment", soap.get("assessment", ""))
+    section("Plan", soap.get("plan", ""))
+
+    meds = soap.get("medications") or []
+    if meds:
+        story.append(Paragraph("Medications", h3))
+        for m in meds:
+            story.append(Paragraph(f"• {m}", body))
+
+    section("Follow-up", soap.get("follow_up", ""))
+
+    if cdt:
+        story.append(Paragraph("CDT 2026 Codes (Suggested)", h3))
+        rows = [["Code", "Nomenclature", "Conf.", "Rationale"]]
+        for c in cdt:
+            rows.append([c["code"], c["nomenclature"], f"{c.get('confidence', 0):.0%}",
+                         c.get("rationale", "")])
+        t = Table(rows, colWidths=[0.7 * inch, 2.6 * inch, 0.6 * inch, 2.7 * inch])
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), TEAL),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 9),
+            ("FONT", (0, 1), (-1, -1), "Helvetica", 8.5),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+             [colors.white, colors.HexColor("#F7FBFC")]),
+            ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#E2E8F0")),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(t)
+
+    qa = state.get("qa") or {}
+    if qa.get("warnings") or qa.get("unconfirmed_terms"):
+        story.append(Paragraph("Quality Notes (auto-generated)", h3))
+        for w in qa.get("warnings", []):
+            story.append(Paragraph(f"• {w}", muted))
+        if qa.get("unconfirmed_terms"):
+            story.append(Paragraph(
+                "Unverified terms (verify against transcript): "
+                + ", ".join(qa["unconfirmed_terms"]), muted))
+
+    notes = soap.get("notes_for_doctor", "")
+    if notes:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("Notes for Doctor", h3))
+        story.append(Paragraph(notes, body))
+
+    story.append(Spacer(1, 16))
+    story.append(HRFlowable(width="100%", thickness=0.4,
+                            color=colors.HexColor("#E2E8F0")))
+    story.append(Paragraph(
+        "Generated by DentaScribe — AI clinical scribe. Review before signing. "
+        "CDT codes © American Dental Association.", muted))
+
+    doc.build(story)
+    return buf.getvalue()

@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dentascribe.ai/schemas/soap.v1.json",
+  "title": "DentaScribe Dental SOAP (US / TSBDE 22 TAC \u00a7108.8 compliant)",
+  "type": "object",
+  "required": [
+    "encounter_meta",
+    "subjective",
+    "objective",
+    "assessment",
+    "plan",
+    "grounding",
+    "quality_flags",
+    "attestation"
+  ],
+  "properties": {
+    "encounter_meta": {
+      "type": "object",
+      "required": [
+        "patient_ref",
+        "provider",
+        "date_iso",
+        "visit_type",
+        "tooth_numbering_system",
+        "practice_location"
+      ],
+      "properties": {
+        "patient_ref": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "object",
+          "required": [
+            "name",
+            "license_number",
+            "npi",
+            "role"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "license_number": {
+              "type": "string"
+            },
+            "npi": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "dentist",
+                "hygienist",
+                "assistant",
+                "specialist"
+              ]
+            }
+          }
+        },
+        "date_iso": {
+          "type": "string",
+          "format": "date"
+        },
+        "visit_type": {
+          "type": "string",
+          "enum": [
+            "new_patient_comprehensive",
+            "periodic_recall",
+            "emergency_limited",
+            "emergency",
+            "restorative_direct",
+            "restorative_indirect",
+            "endodontic",
+            "periodontal_hygiene",
+            "oral_surgery",
+            "ortho_consult",
+            "post_op_followup"
+          ]
+        },
+        "tooth_numbering_system": {
+          "type": "string",
+          "enum": [
+            "Universal",
+            "Palmer",
+            "FDI"
+          ]
+        },
+        "practice_location": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "zip": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "subjective": {
+      "type": "object",
+      "properties": {
+        "chief_complaint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hpi": {
+          "type": "object",
+          "properties": {
+            "onset": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "duration": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "character": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "severity_0_10": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10
+            },
+            "triggers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "relieving_factors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "functional_impact": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "medical_history_update": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "medications": {
+          "type": "array"
+        },
+        "allergies": {
+          "type": "array"
+        },
+        "dental_history": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "social_history": {
+          "type": "object"
+        },
+        "patient_goals": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "properties": {
+        "vitals": {
+          "type": "object"
+        },
+        "extraoral": {
+          "type": "object"
+        },
+        "intraoral_soft_tissue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "periodontal": {
+          "type": "object"
+        },
+        "hard_tissue_findings": {
+          "type": "array"
+        },
+        "occlusion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "diagnostic_tests": {
+          "type": "object"
+        },
+        "radiographic_findings": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "photos_taken": {
+          "type": "array"
+        }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "properties": {
+        "primary_diagnosis": {
+          "type": "array"
+        },
+        "differential": {
+          "type": "array"
+        },
+        "contributing_factors": {
+          "type": "array"
+        },
+        "risk_assessment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "properties": {
+        "procedures_today": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tooth": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "procedure": {
+                "type": "string"
+              },
+              "cdt_code": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^D[0-9]{4}$"
+              },
+              "cdt_confidence": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "cdt_rationale": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "materials": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "anesthesia": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "procedures_recommended": {
+          "type": "array"
+        },
+        "prescriptions": {
+          "type": "array"
+        },
+        "patient_education": {
+          "type": "array"
+        },
+        "informed_consent": {
+          "type": "object"
+        },
+        "referrals": {
+          "type": "array"
+        },
+        "home_care": {
+          "type": "array"
+        },
+        "follow_up": {
+          "type": "object"
+        }
+      }
+    },
+    "grounding": {
+      "type": "object",
+      "required": [
+        "transcript_spans"
+      ],
+      "properties": {
+        "transcript_spans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "field_path",
+              "quote",
+              "line_index"
+            ],
+            "properties": {
+              "field_path": {
+                "type": "string"
+              },
+              "quote": {
+                "type": "string"
+              },
+              "line_index": {
+                "type": "integer"
+              },
+              "speaker": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "quality_flags": {
+      "type": "object",
+      "properties": {
+        "unverified_terms": {
+          "type": "array"
+        },
+        "hallucination_risk": {
+          "type": "array"
+        },
+        "missing_required": {
+          "type": "array"
+        },
+        "signability_score": {
+          "type": "number"
+        }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "required": [
+        "provider_reviewed",
+        "ai_assisted_disclosure"
+      ],
+      "properties": {
+        "provider_reviewed": {
+          "type": "boolean"
+        },
+        "ai_assisted_disclosure": {
+          "type": "boolean"
+        },
+        "signed_at_iso": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signature_method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

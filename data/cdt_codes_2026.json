@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "source": "ADA CDT 2026 — Code on Dental Procedures and Nomenclature",
+    "note": "Representative subset for MVP. The full CDT 2026 contains ~700 codes including 31 additions, 14 revisions, 6 deletions, 9 editorial actions vs CDT 2025. License the full code set from ADA for production use.",
+    "categories": [
+      "Diagnostic", "Preventive", "Restorative", "Endodontics",
+      "Periodontics", "Prosthodontics-Removable", "Prosthodontics-Fixed",
+      "Oral & Maxillofacial Surgery", "Orthodontics", "Adjunctive"
+    ]
+  },
+  "codes": [
+    {"code": "D0120", "nomenclature": "Periodic oral evaluation – established patient", "category": "Diagnostic"},
+    {"code": "D0140", "nomenclature": "Limited oral evaluation – problem focused", "category": "Diagnostic"},
+    {"code": "D0150", "nomenclature": "Comprehensive oral evaluation – new or established patient", "category": "Diagnostic"},
+    {"code": "D0210", "nomenclature": "Intraoral – complete series of radiographic images", "category": "Diagnostic"},
+    {"code": "D0220", "nomenclature": "Intraoral – periapical first radiographic image", "category": "Diagnostic"},
+    {"code": "D0230", "nomenclature": "Intraoral – periapical each additional radiographic image", "category": "Diagnostic"},
+    {"code": "D0274", "nomenclature": "Bitewings – four radiographic images", "category": "Diagnostic"},
+    {"code": "D0330", "nomenclature": "Panoramic radiographic image", "category": "Diagnostic"},
+    {"code": "D0426", "nomenclature": "Point-of-care saliva testing (CDT 2026 NEW)", "category": "Diagnostic"},
+    {"code": "D0461", "nomenclature": "Cracked-tooth testing (CDT 2026 NEW)", "category": "Diagnostic"},
+
+    {"code": "D1110", "nomenclature": "Prophylaxis – adult", "category": "Preventive"},
+    {"code": "D1120", "nomenclature": "Prophylaxis – child", "category": "Preventive"},
+    {"code": "D1206", "nomenclature": "Topical application of fluoride varnish", "category": "Preventive"},
+    {"code": "D1208", "nomenclature": "Topical application of fluoride – excluding varnish", "category": "Preventive"},
+    {"code": "D1351", "nomenclature": "Sealant – per tooth", "category": "Preventive"},
+    {"code": "D1354", "nomenclature": "Interim caries arresting medicament application (SDF) – per tooth", "category": "Preventive"},
+
+    {"code": "D2140", "nomenclature": "Amalgam – one surface, primary or permanent", "category": "Restorative"},
+    {"code": "D2150", "nomenclature": "Amalgam – two surfaces, primary or permanent", "category": "Restorative"},
+    {"code": "D2330", "nomenclature": "Resin-based composite – one surface, anterior", "category": "Restorative"},
+    {"code": "D2331", "nomenclature": "Resin-based composite – two surfaces, anterior", "category": "Restorative"},
+    {"code": "D2332", "nomenclature": "Resin-based composite – three surfaces, anterior", "category": "Restorative"},
+    {"code": "D2335", "nomenclature": "Resin-based composite – four or more surfaces or involving incisal angle (anterior)", "category": "Restorative"},
+    {"code": "D2391", "nomenclature": "Resin-based composite – one surface, posterior", "category": "Restorative"},
+    {"code": "D2392", "nomenclature": "Resin-based composite – two surfaces, posterior", "category": "Restorative"},
+    {"code": "D2393", "nomenclature": "Resin-based composite – three surfaces, posterior", "category": "Restorative"},
+    {"code": "D2394", "nomenclature": "Resin-based composite – four or more surfaces, posterior", "category": "Restorative"},
+    {"code": "D2740", "nomenclature": "Crown – porcelain/ceramic", "category": "Restorative"},
+    {"code": "D2750", "nomenclature": "Crown – porcelain fused to high noble metal", "category": "Restorative"},
+    {"code": "D2960", "nomenclature": "Labial veneer (resin laminate) – chairside", "category": "Restorative"},
+    {"code": "D2962", "nomenclature": "Labial veneer (porcelain laminate) – laboratory", "category": "Restorative"},
+
+    {"code": "D3110", "nomenclature": "Pulp cap – direct (excluding final restoration)", "category": "Endodontics"},
+    {"code": "D3220", "nomenclature": "Therapeutic pulpotomy (excluding final restoration)", "category": "Endodontics"},
+    {"code": "D3310", "nomenclature": "Endodontic therapy, anterior tooth (excluding final restoration)", "category": "Endodontics"},
+    {"code": "D3320", "nomenclature": "Endodontic therapy, premolar tooth (excluding final restoration)", "category": "Endodontics"},
+    {"code": "D3330", "nomenclature": "Endodontic therapy, molar tooth (excluding final restoration)", "category": "Endodontics"},
+
+    {"code": "D4341", "nomenclature": "Periodontal scaling and root planing – four or more teeth per quadrant", "category": "Periodontics"},
+    {"code": "D4342", "nomenclature": "Periodontal scaling and root planing – one to three teeth per quadrant", "category": "Periodontics"},
+    {"code": "D4346", "nomenclature": "Scaling in presence of generalized moderate or severe gingival inflammation – full mouth", "category": "Periodontics"},
+    {"code": "D4910", "nomenclature": "Periodontal maintenance", "category": "Periodontics"},
+
+    {"code": "D7140", "nomenclature": "Extraction, erupted tooth or exposed root", "category": "Oral & Maxillofacial Surgery"},
+    {"code": "D7210", "nomenclature": "Extraction of erupted tooth requiring removal of bone and/or sectioning", "category": "Oral & Maxillofacial Surgery"},
+    {"code": "D7220", "nomenclature": "Removal of impacted tooth – soft tissue", "category": "Oral & Maxillofacial Surgery"},
+    {"code": "D7230", "nomenclature": "Removal of impacted tooth – partially bony", "category": "Oral & Maxillofacial Surgery"},
+    {"code": "D7240", "nomenclature": "Removal of impacted tooth – completely bony", "category": "Oral & Maxillofacial Surgery"},
+
+    {"code": "D8080", "nomenclature": "Comprehensive orthodontic treatment of the adolescent dentition", "category": "Orthodontics"},
+    {"code": "D8090", "nomenclature": "Comprehensive orthodontic treatment of the adult dentition", "category": "Orthodontics"},
+
+    {"code": "D9110", "nomenclature": "Palliative treatment of dental pain – per visit", "category": "Adjunctive"},
+    {"code": "D9230", "nomenclature": "Inhalation of nitrous oxide/analgesia, anxiolysis", "category": "Adjunctive"},
+    {"code": "D9944", "nomenclature": "Occlusal guard – hard appliance, full arch", "category": "Adjunctive"},
+    {"code": "D9945", "nomenclature": "Occlusal guard – soft appliance, full arch", "category": "Adjunctive"},
+    {"code": "D9999", "nomenclature": "Unspecified adjunctive procedure, by report", "category": "Adjunctive"}
+  ]
+}
