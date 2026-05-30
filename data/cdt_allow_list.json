@@ -1,0 +1,204 @@
+{
+  "_meta": {
+    "purpose": "Strict allow-list of CDT codes the Coder agent may emit. Coder must NEVER return a code not in this list.",
+    "license_note": "This is a curated subset for MVP. Full ADA CDT catalog requires license from the American Dental Association. Replace with licensed catalog before production.",
+    "version": "CDT-2025-subset-v0.1"
+  },
+  "codes": [
+    {
+      "code": "D0120",
+      "description": "Periodic oral evaluation - established patient",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0140",
+      "description": "Limited oral evaluation - problem focused",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0150",
+      "description": "Comprehensive oral evaluation - new or established patient",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0210",
+      "description": "Intraoral - complete series of radiographic images",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0220",
+      "description": "Intraoral - periapical first radiographic image",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0230",
+      "description": "Intraoral - periapical each additional radiographic image",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0274",
+      "description": "Bitewings - four radiographic images",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D0330",
+      "description": "Panoramic radiographic image",
+      "category": "diagnostic"
+    },
+    {
+      "code": "D1110",
+      "description": "Prophylaxis - adult",
+      "category": "preventive"
+    },
+    {
+      "code": "D1206",
+      "description": "Topical application of fluoride varnish",
+      "category": "preventive"
+    },
+    {
+      "code": "D1208",
+      "description": "Topical application of fluoride - excluding varnish",
+      "category": "preventive"
+    },
+    {
+      "code": "D2140",
+      "description": "Amalgam - one surface, primary or permanent",
+      "category": "restorative"
+    },
+    {
+      "code": "D2150",
+      "description": "Amalgam - two surfaces, primary or permanent",
+      "category": "restorative"
+    },
+    {
+      "code": "D2160",
+      "description": "Amalgam - three surfaces, primary or permanent",
+      "category": "restorative"
+    },
+    {
+      "code": "D2391",
+      "description": "Resin-based composite - one surface, posterior",
+      "category": "restorative"
+    },
+    {
+      "code": "D2392",
+      "description": "Resin-based composite - two surfaces, posterior",
+      "category": "restorative"
+    },
+    {
+      "code": "D2393",
+      "description": "Resin-based composite - three surfaces, posterior",
+      "category": "restorative"
+    },
+    {
+      "code": "D2394",
+      "description": "Resin-based composite - four or more surfaces, posterior",
+      "category": "restorative"
+    },
+    {
+      "code": "D2740",
+      "description": "Crown - porcelain/ceramic",
+      "category": "restorative"
+    },
+    {
+      "code": "D2750",
+      "description": "Crown - porcelain fused to high noble metal",
+      "category": "restorative"
+    },
+    {
+      "code": "D3310",
+      "description": "Endodontic therapy, anterior tooth (excluding final restoration)",
+      "category": "endodontics"
+    },
+    {
+      "code": "D3320",
+      "description": "Endodontic therapy, premolar tooth (excluding final restoration)",
+      "category": "endodontics"
+    },
+    {
+      "code": "D3330",
+      "description": "Endodontic therapy, molar tooth (excluding final restoration)",
+      "category": "endodontics"
+    },
+    {
+      "code": "D3346",
+      "description": "Retreatment of previous root canal therapy - anterior",
+      "category": "endodontics"
+    },
+    {
+      "code": "D3347",
+      "description": "Retreatment of previous root canal therapy - premolar",
+      "category": "endodontics"
+    },
+    {
+      "code": "D3348",
+      "description": "Retreatment of previous root canal therapy - molar",
+      "category": "endodontics"
+    },
+    {
+      "code": "D4341",
+      "description": "Periodontal scaling and root planing - four or more teeth per quadrant",
+      "category": "periodontics"
+    },
+    {
+      "code": "D4342",
+      "description": "Periodontal scaling and root planing - one to three teeth per quadrant",
+      "category": "periodontics"
+    },
+    {
+      "code": "D4346",
+      "description": "Scaling in presence of generalized moderate or severe gingival inflammation",
+      "category": "periodontics"
+    },
+    {
+      "code": "D4910",
+      "description": "Periodontal maintenance",
+      "category": "periodontics"
+    },
+    {
+      "code": "D7140",
+      "description": "Extraction, erupted tooth or exposed root",
+      "category": "oral_surgery"
+    },
+    {
+      "code": "D7210",
+      "description": "Extraction, erupted tooth requiring removal of bone and/or sectioning",
+      "category": "oral_surgery"
+    },
+    {
+      "code": "D7220",
+      "description": "Removal of impacted tooth - soft tissue",
+      "category": "oral_surgery"
+    },
+    {
+      "code": "D7230",
+      "description": "Removal of impacted tooth - partially bony",
+      "category": "oral_surgery"
+    },
+    {
+      "code": "D7240",
+      "description": "Removal of impacted tooth - completely bony",
+      "category": "oral_surgery"
+    },
+    {
+      "code": "D9110",
+      "description": "Palliative treatment of dental pain - per visit",
+      "category": "adjunctive"
+    },
+    {
+      "code": "D9215",
+      "description": "Local anesthesia in conjunction with operative or surgical procedures",
+      "category": "adjunctive"
+    },
+    {
+      "code": "D9230",
+      "description": "Inhalation of nitrous oxide / analgesia, anxiolysis",
+      "category": "adjunctive"
+    },
+    {
+      "code": "D9944",
+      "description": "Occlusal guard - hard appliance, full arch",
+      "category": "adjunctive"
+    }
+  ]
+}

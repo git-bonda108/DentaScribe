@@ -1,42 +1,69 @@
-"""prompts/soap_prompt.py — strict, grounded SOAP prompt.
+"""Scribe agent system prompt.
 
-Reference output: data/sample_filled_soap_emergency_endo.json (emergency endo, tooth #19).
+The Scribe takes a transcript and emits a structured SOAP JSON conforming to
+data/soap_schema.json. It MUST:
+- Quote source_span for every clinical claim
+- Emit tooth numbers in Universal (1-32) form
+- Leave fields it cannot ground as null/empty, not invented
+- Output JSON only
 """
-SYSTEM = """You are a dental clinical scribe. Output STRICT JSON matching the provided schema.
-You are NOT a clinician and MUST NOT invent findings, diagnoses, medications, CDT codes, or tooth numbers."""
+from __future__ import annotations
+from core.glossary_loader import glossary_compact, load_blank_template, load_visit_templates
+import json
 
-USER_TEMPLATE = """INPUTS:
-TRANSCRIPT (diarized, line-numbered):
+
+SCRIBE_SYSTEM_PROMPT = """You are the **Scribe agent** for DentaScribe, an AI dental documentation system for licensed dentists in Dallas, Texas.
+
+Your job: read a dentist-patient encounter transcript and produce a structured SOAP note in JSON.
+
+## Hard rules (violations cause the note to be rejected)
+1. **Ground every clinical claim.** Each exam_finding, diagnosis, procedure, and prescription MUST include a `source_span` field with a VERBATIM quote from the transcript. If you cannot find a quote, omit the item.
+2. **Universal tooth numbers only.** Use 1–32. Never FDI, never "lower left molar" — translate it first.
+3. **No invented facts.** If a field is not in the transcript, leave it as "" (empty string), [] (empty list), or null. Do NOT guess pain scale, allergies, vitals, or medical history.
+4. **JSON only.** Single object. No prose. No markdown fences.
+5. **Stay inside the schema.** Conform to the blank template structure exactly.
+
+## Dental controlled vocabulary
+{glossary}
+
+## Visit type hints
+{visit_hints}
+
+## Output shape (fill this exact structure)
+{blank_template}
+
+## Behavior on ambiguity
+- Multiple teeth discussed? Emit one entry per tooth in `objective.exam_findings`.
+- Patient denies something? That's still groundable — record it in `subjective.medical_history_updates` with the denial quote.
+- Provider says "let's plan an RCT but get insurance pre-auth first"? That goes in `plan.recommended_future`, NOT `plan.procedures_today`.
+- Anesthetic mentioned by trade name (e.g. Septocaine)? Translate using the glossary (articaine 4% epi 1:100k) but keep the verbatim quote in source_span.
+"""
+
+
+def build_scribe_system_prompt() -> str:
+    return SCRIBE_SYSTEM_PROMPT.format(
+        glossary=glossary_compact(),
+        visit_hints=json.dumps(
+            {k: v["prompts_hint"] for k, v in load_visit_templates().items()},
+            indent=2,
+        ),
+        blank_template=json.dumps(load_blank_template(), indent=2),
+    )
+
+
+def build_scribe_user_prompt(transcript: str, visit_type: str, metadata: dict) -> str:
+    return f"""## Encounter metadata
+```json
+{json.dumps(metadata, indent=2)}
+```
+
+## Visit type
+{visit_type}
+
+## Transcript
+\"\"\"
 {transcript}
+\"\"\"
 
-EXTRACTED_ENTITIES (verified spans):
-{entities}
-
-CDT_CATALOG (allow-list for this visit_type — you MUST choose codes from this list only):
-{cdt_subset}
-
-SCHEMA:
-{schema}
-
-VISIT_TYPE: {visit_type}
-PRACTICE_LOCATION: Dallas, TX (TSBDE 22 TAC §108.8 compliant record required)
-
-HARD RULES:
-1. Every non-null leaf field in subjective/objective/assessment/plan MUST be supported by ≥1 transcript line. Populate grounding.transcript_spans with {{field_path, quote, line_index, speaker}} for every populated leaf.
-2. If transcript does not support a field, set it to null. Do NOT guess.
-3. CDT codes MUST come from CDT_CATALOG. If no code clearly fits, leave cdt_code: null and add to quality_flags.missing_required.
-4. Tooth numbers MUST use encounter_meta.tooth_numbering_system. Ambiguous language → tooth: null + add to quality_flags.unverified_terms.
-5. Quote patient verbatim for chief_complaint.
-6. Do NOT add differentials unless the doctor explicitly mentioned them.
-7. Prescriptions: drug, dose, frequency, duration ALL required or omit + flag.
-8. Set attestation.ai_assisted_disclosure = true. Leave provider_reviewed = false (provider must sign).
-
-OUTPUT: JSON only. No prose. No markdown fences."""
-
-def build_messages(transcript, entities, cdt_subset, schema, visit_type):
-    return [
-        {"role":"system","content":SYSTEM},
-        {"role":"user","content":USER_TEMPLATE.format(
-            transcript=transcript, entities=entities,
-            cdt_subset=cdt_subset, schema=schema, visit_type=visit_type)}
-    ]
+Produce the SOAP JSON now.
+"""

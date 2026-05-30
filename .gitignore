@@ -1,35 +1,43 @@
-# Secrets — never commit
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-
 # Python
 __pycache__/
-*.pyc
-*.pyo
-.Python
+*.py[cod]
 *.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Virtualenvs
 .venv/
 venv/
-env/
 
-# Local state
-.runtime/
+# uv
+.uv/
+
+# Env / secrets
+.env
+*.key
+
+# DB
 *.db
-*.db-journal
-dentascribe.db
+*.sqlite3
 
-# Eval artifacts — only baseline is tracked
-eval/reports/eval-*.json
-eval/reports/eval-*.md
-
-# Streamlit / OS
+# Streamlit
 .streamlit/secrets.toml
+
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# PHI safety net — never commit anything in these
+patient_data/
+exports_local/
+recordings/

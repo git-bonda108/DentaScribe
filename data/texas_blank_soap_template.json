@@ -1,17 +1,39 @@
 {
-  "encounter_meta": {
-    "patient_ref": "",
+  "_texas_compliance_notes": {
+    "regulatory_basis": "22 TAC \u00a7108.8 \u2014 Records of the Dental Patient (Texas State Board of Dental Examiners)",
+    "retention": "Adult records: minimum 5 years from last date of service. Minors: until age of majority + 5 years.",
+    "required_fields": [
+      "Patient full identification",
+      "Medical history & updates",
+      "Informed consent",
+      "Diagnosis",
+      "Treatment plan & treatment rendered",
+      "Radiographs (and justification)",
+      "Anesthetics administered (type, amount, time)",
+      "Provider identity & license number"
+    ],
+    "controlled_substance_note": "Schedule II\u2013V prescriptions require Texas PMP check before issuance per HB 2174.",
+    "do_not_remove": "This block self-documents the template's regulatory grounding. Strip only when exporting to PMS."
+  },
+  "metadata": {
+    "encounter_id": "",
+    "date_of_service": "",
     "provider": {
       "name": "",
-      "license_number": "TX-DDS-#####",
-      "npi": "",
-      "role": "dentist"
+      "tsbde_license": "",
+      "npi": ""
     },
-    "date_iso": "",
-    "visit_type": "periodic_recall",
-    "tooth_numbering_system": "Universal",
-    "practice_location": {
-      "name": "DentaScribe Practice",
+    "patient": {
+      "patient_id": "",
+      "dob": "",
+      "consent_on_file": false,
+      "medical_alerts": [],
+      "medications": [],
+      "allergies": []
+    },
+    "visit_type": "",
+    "clinic": {
+      "name": "",
       "address": "",
       "city": "Dallas",
       "state": "TX",
@@ -20,118 +42,59 @@
   },
   "subjective": {
     "chief_complaint": "",
-    "hpi": {
-      "onset": "",
-      "duration": "",
-      "character": null,
-      "severity_0_10": null,
-      "triggers": [],
-      "relieving_factors": [],
-      "functional_impact": ""
-    },
-    "medical_history_update": "",
-    "medications": [],
-    "allergies": [],
-    "dental_history": "",
-    "social_history": {
-      "tobacco": "",
-      "alcohol": "",
-      "oral_hygiene": ""
-    },
-    "patient_goals": ""
+    "hpi": "",
+    "pain_scale": null,
+    "pain_quality": "",
+    "duration": "",
+    "triggers": [],
+    "medical_history_updates": ""
   },
   "objective": {
     "vitals": {
       "bp": "",
-      "hr": null,
-      "temp_f": null,
-      "spo2": null
+      "pulse": "",
+      "temp": ""
     },
-    "extraoral": {
-      "facial_symmetry": "WNL",
-      "lymph_nodes": "WNL",
-      "tmj": "WNL",
-      "swelling": "None"
-    },
-    "intraoral_soft_tissue": "",
-    "periodontal": {
-      "summary": "",
-      "probing_depths_mm": [],
-      "bop_percent": null,
-      "recession_mm": [],
-      "mobility": [],
-      "furcation": []
-    },
-    "hard_tissue_findings": [],
-    "occlusion": "",
-    "diagnostic_tests": {
-      "percussion": [],
-      "palpation": [],
-      "cold_test": [],
-      "ept": [],
-      "bite_test": []
-    },
-    "radiographic_findings": "",
-    "photos_taken": []
+    "extra_oral": "",
+    "intra_oral": "",
+    "exam_findings": [],
+    "radiographs_taken": [],
+    "perio_summary": ""
   },
   "assessment": {
-    "primary_diagnosis": [],
-    "differential": [],
-    "contributing_factors": [],
-    "risk_assessment": ""
+    "diagnoses": [],
+    "prognosis": ""
   },
   "plan": {
     "procedures_today": [],
-    "procedures_recommended": [],
+    "recommended_future": [],
     "prescriptions": [],
-    "patient_education": [],
-    "informed_consent": {
-      "obtained": false,
-      "risks_benefits_alternatives_discussed": false,
-      "signed_form_on_file": false,
-      "consent_quote": ""
+    "patient_instructions": "",
+    "follow_up": ""
+  },
+  "billing": {
+    "cdt_codes": [],
+    "estimated_total": 0.0
+  },
+  "compliance": {
+    "tsbde_checklist": {
+      "patient_identification_complete": false,
+      "medical_history_reviewed": false,
+      "informed_consent_documented": false,
+      "diagnosis_documented": false,
+      "treatment_plan_documented": false,
+      "radiographs_justified": false,
+      "anesthetic_documented": false,
+      "provider_signature_block_present": false
     },
-    "referrals": [],
-    "home_care": [],
-    "follow_up": {
-      "when": "",
-      "purpose": ""
+    "provider_attestation": {
+      "signed": false,
+      "signed_at": "",
+      "signed_by": ""
     }
   },
   "grounding": {
-    "transcript_spans": []
-  },
-  "quality_flags": {
-    "unverified_terms": [],
-    "hallucination_risk": [],
-    "missing_required": [],
-    "signability_score": 0.0
-  },
-  "attestation": {
-    "provider_reviewed": false,
-    "ai_assisted_disclosure": true,
-    "signed_at_iso": null,
-    "signature_method": null
-  },
-  "_texas_compliance_notes": {
-    "rule": "22 TAC \u00a7108.8 \u2014 Records of the Dental Patient",
-    "required_elements": [
-      "Patient identification",
-      "Medical and dental history with updates",
-      "Chief complaint and clinical findings",
-      "Diagnoses and treatment plan",
-      "Treatment rendered including materials and medications",
-      "Informed consent documentation",
-      "Radiographs referenced and retained",
-      "Provider signature/identification on every entry"
-    ],
-    "retention_years_adults": 5,
-    "retention_minors": "Until age of majority + 5 years",
-    "pmp_required_for": [
-      "Schedule II\u2013V controlled substances"
-    ],
-    "ai_disclosure_recommended": true,
-    "source_url": "https://texreg.sos.state.tx.us/public/readtac$ext.TacPage?sl=R&app=9&pg=1&ti=22&pt=5&ch=108&rl=8",
-    "tsbde_url": "https://tsbde.texas.gov/laws-rules/dental-practice-act-tsbde-rules/"
+    "transcript_excerpts": [],
+    "ungrounded_claims": []
   }
 }

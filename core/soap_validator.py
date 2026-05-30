@@ -1,248 +1,249 @@
-"""JSON Schema + grounding + CDT allow-list validator for SOAP v2 outputs.
+"""Four-layer SOAP validator.
 
-Runs after SOAP generation (see agents/validator.py). Complements the
-term-level anti-hallucination checks — does not replace them.
+Layer 1 — STRUCTURAL: jsonschema against data/soap_schema.json
+Layer 2 — GROUNDING:  every clinical claim has a source_span found in the transcript
+Layer 3 — CDT:        every billing code is in data/cdt_allow_list.json
+Layer 4 — TEXAS:      soft TSBDE rules (consent, license, anesthetic record, sig block)
+
+Result: ValidationReport with errors/warnings/info, plus signability_score (0-100).
+A score >= 80 and zero blocking errors -> safe to present to provider for sign-off.
 """
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import re
+from dataclasses import dataclass, field, asdict
 
-from core.soap_schema import SCHEMA_PATH, VISIT_TEMPLATES_PATH
+from jsonschema import Draft7Validator
 
-try:
-    from jsonschema import Draft202012Validator
-except ImportError as exc:  # pragma: no cover
-    raise ImportError(
-        "jsonschema is required. Install with: pip install jsonschema"
-    ) from exc
+from core.glossary_loader import load_schema, load_cdt_allow_list
 
 
-class SOAPValidationError(Exception):
-    """Raised when SOAP output fails validation. .feedback is LLM-ready."""
+# Severity levels
+ERROR = "error"      # blocks sign-off
+WARN = "warning"     # surface but allow
+INFO = "info"        # nice-to-fix
 
-    def __init__(self, message: str, errors: List[str], feedback: str):
-        super().__init__(message)
-        self.errors = errors
-        self.feedback = feedback
+
+@dataclass
+class Issue:
+    layer: str       # "structural" | "grounding" | "cdt" | "texas"
+    severity: str    # ERROR | WARN | INFO
+    path: str
+    message: str
+    suggestion: str = ""
 
 
 @dataclass
 class ValidationReport:
-    ok: bool
-    schema_errors: List[str] = field(default_factory=list)
-    grounding_errors: List[str] = field(default_factory=list)
-    cdt_errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    signability_score: float = 0.0
+    valid: bool
+    signability_score: int
+    issues: list[Issue] = field(default_factory=list)
 
-    def as_dict(self) -> Dict[str, Any]:
+    @property
+    def errors(self) -> list[Issue]:
+        return [i for i in self.issues if i.severity == ERROR]
+
+    @property
+    def warnings(self) -> list[Issue]:
+        return [i for i in self.issues if i.severity == WARN]
+
+    @property
+    def infos(self) -> list[Issue]:
+        return [i for i in self.issues if i.severity == INFO]
+
+    def as_dict(self) -> dict:
         return {
-            "ok": self.ok,
-            "schema_errors": self.schema_errors,
-            "grounding_errors": self.grounding_errors,
-            "cdt_errors": self.cdt_errors,
-            "warnings": self.warnings,
-            "signability_score": round(self.signability_score, 3),
+            "valid": self.valid,
+            "signability_score": self.signability_score,
+            "issues": [asdict(i) for i in self.issues],
+            "counts": {
+                "errors": len(self.errors),
+                "warnings": len(self.warnings),
+                "infos": len(self.infos),
+            },
         }
-
-    def llm_feedback(self) -> str:
-        parts = []
-        if self.schema_errors:
-            parts.append("SCHEMA ERRORS:\n- " + "\n- ".join(self.schema_errors))
-        if self.grounding_errors:
-            parts.append(
-                "GROUNDING ERRORS (every populated field needs a transcript span):\n- "
-                + "\n- ".join(self.grounding_errors)
-            )
-        if self.cdt_errors:
-            parts.append(
-                "CDT ERRORS (codes must come from the visit-type allow-list):\n- "
-                + "\n- ".join(self.cdt_errors)
-            )
-        return "\n\n".join(parts) if parts else ""
-
-
-_GROUNDING_REQUIRED_PATHS = [
-    "subjective.chief_complaint",
-    "subjective.hpi.severity_0_10",
-    "subjective.hpi.character",
-    "subjective.hpi.triggers",
-    "subjective.medications",
-    "subjective.allergies",
-    "objective.diagnostic_tests.percussion",
-    "objective.diagnostic_tests.cold_test",
-    "objective.diagnostic_tests.ept",
-    "objective.radiographic_findings",
-    "objective.hard_tissue_findings",
-    "assessment.primary_diagnosis",
-    "plan.procedures_today",
-    "plan.procedures_recommended",
-    "plan.prescriptions",
-]
 
 
 class SOAPValidator:
-    def __init__(
-        self,
-        schema_path: str | Path | None = None,
-        visit_templates_path: str | Path | None = None,
-    ) -> None:
-        schema_path = schema_path or SCHEMA_PATH
-        visit_templates_path = visit_templates_path or VISIT_TEMPLATES_PATH
-        with open(schema_path, "r", encoding="utf-8") as f:
-            self._schema = json.load(f)
-        self._struct_validator = Draft202012Validator(self._schema)
+    def __init__(self):
+        self.schema = load_schema()
+        self.schema_validator = Draft7Validator(self.schema)
+        self.allowed_cdt = {c["code"] for c in load_cdt_allow_list()["codes"]}
 
-        with open(visit_templates_path, "r", encoding="utf-8") as f:
-            self._visit_templates = json.load(f)
+    # ---------- main entrypoint ----------
+    def validate(self, soap: dict, transcript: str = "") -> ValidationReport:
+        issues: list[Issue] = []
+        issues.extend(self._layer1_structural(soap))
+        issues.extend(self._layer2_grounding(soap, transcript))
+        issues.extend(self._layer3_cdt(soap))
+        issues.extend(self._layer4_texas(soap))
 
-    def validate(
-        self,
-        soap: Dict[str, Any],
-        transcript_lines: Optional[List[str]] = None,
-        raise_on_error: bool = True,
-    ) -> ValidationReport:
-        report = ValidationReport(ok=True)
+        score = self._signability_score(issues)
+        valid = not any(i.severity == ERROR for i in issues)
+        return ValidationReport(valid=valid, signability_score=score, issues=issues)
 
-        self._validate_schema(soap, report)
-        self._validate_grounding(soap, transcript_lines or [], report)
-        self._validate_cdt_allow_list(soap, report)
-        self._validate_texas_rules(soap, report)
-        self._score_signability(soap, report)
+    # ---------- layer 1: structural ----------
+    def _layer1_structural(self, soap: dict) -> list[Issue]:
+        out = []
+        for err in self.schema_validator.iter_errors(soap):
+            path = "/".join(str(p) for p in err.absolute_path) or "<root>"
+            out.append(Issue(
+                layer="structural",
+                severity=ERROR,
+                path=path,
+                message=err.message,
+                suggestion="Conform to data/soap_schema.json",
+            ))
+        return out
 
-        report.ok = not (
-            report.schema_errors or report.grounding_errors or report.cdt_errors
+    # ---------- layer 2: grounding ----------
+    def _layer2_grounding(self, soap: dict, transcript: str) -> list[Issue]:
+        out = []
+        if not transcript:
+            out.append(Issue(
+                layer="grounding", severity=WARN, path="<root>",
+                message="No transcript provided to validator; grounding checks skipped.",
+                suggestion="Pass transcript to validate() to enable grounding.",
+            ))
+            return out
+
+        norm_transcript = _normalize(transcript)
+
+        def check(items, path_prefix, label, skip=None):
+            for i, item in enumerate(items or []):
+                # Optional per-item skip predicate. Used for CDT codes where
+                # the Coder agent legitimately set code=null (no allow-listed
+                # code fits) — there's no clinical claim to ground, and
+                # Layer 3 already emits a WARN for the missing code.
+                if skip is not None and skip(item):
+                    continue
+                span = (item.get("source_span") or "").strip()
+                p = f"{path_prefix}[{i}].source_span"
+                if not span:
+                    out.append(Issue(
+                        layer="grounding", severity=ERROR, path=p,
+                        message=f"{label} missing source_span",
+                        suggestion="Add a verbatim transcript quote.",
+                    ))
+                    continue
+                if _normalize(span) not in norm_transcript:
+                    out.append(Issue(
+                        layer="grounding", severity=ERROR, path=p,
+                        message=f"{label} source_span not found in transcript: {span[:80]!r}",
+                        suggestion="Either quote exactly or remove this item.",
+                    ))
+
+        check(soap.get("objective", {}).get("exam_findings"), "objective.exam_findings", "Exam finding")
+        check(soap.get("assessment", {}).get("diagnoses"), "assessment.diagnoses", "Diagnosis")
+        check(soap.get("plan", {}).get("procedures_today"), "plan.procedures_today", "Procedure")
+        check(soap.get("billing", {}).get("cdt_codes"), "billing.cdt_codes", "CDT code",
+              skip=lambda c: c.get("code") is None)
+        return out
+
+    # ---------- layer 3: CDT ----------
+    def _layer3_cdt(self, soap: dict) -> list[Issue]:
+        out = []
+        for i, item in enumerate(soap.get("billing", {}).get("cdt_codes") or []):
+            code = item.get("code")
+            if code is None:
+                out.append(Issue(
+                    layer="cdt", severity=WARN, path=f"billing.cdt_codes[{i}].code",
+                    message="No CDT code assigned (procedure documented but uncoded)",
+                    suggestion="Provider review: add code or remove procedure.",
+                ))
+                continue
+            if not re.fullmatch(r"D[0-9]{4}", code):
+                out.append(Issue(
+                    layer="cdt", severity=ERROR, path=f"billing.cdt_codes[{i}].code",
+                    message=f"Malformed CDT code: {code!r}",
+                    suggestion="Format must be D followed by 4 digits.",
+                ))
+            elif code not in self.allowed_cdt:
+                out.append(Issue(
+                    layer="cdt", severity=ERROR, path=f"billing.cdt_codes[{i}].code",
+                    message=f"CDT code {code} is not in the allow-list (likely hallucinated).",
+                    suggestion="Use a code from data/cdt_allow_list.json or return null.",
+                ))
+        return out
+
+    # ---------- layer 4: Texas / TSBDE ----------
+    def _layer4_texas(self, soap: dict) -> list[Issue]:
+        out = []
+        meta = soap.get("metadata", {})
+        provider = meta.get("provider", {})
+        patient = meta.get("patient", {})
+
+        if not provider.get("tsbde_license"):
+            out.append(Issue(
+                layer="texas", severity=ERROR, path="metadata.provider.tsbde_license",
+                message="Texas TSBDE provider license is required.",
+                suggestion="Set CLINIC env var or fill the provider block.",
+            ))
+        if not meta.get("date_of_service"):
+            out.append(Issue(
+                layer="texas", severity=ERROR, path="metadata.date_of_service",
+                message="Date of service required per 22 TAC §108.8.",
+                suggestion="Default to encounter date.",
+            ))
+        if not patient.get("consent_on_file"):
+            out.append(Issue(
+                layer="texas", severity=WARN, path="metadata.patient.consent_on_file",
+                message="Informed consent not marked on file.",
+                suggestion="Provider must attest consent before procedure.",
+            ))
+
+        # Anesthetic documentation
+        had_anesthesia = any(
+            (p.get("anesthesia") or "").strip()
+            for p in soap.get("plan", {}).get("procedures_today") or []
         )
+        anes_flag = soap.get("compliance", {}).get("tsbde_checklist", {}).get("anesthetic_documented")
+        if had_anesthesia and not anes_flag:
+            out.append(Issue(
+                layer="texas", severity=WARN, path="compliance.tsbde_checklist.anesthetic_documented",
+                message="Anesthetic given but compliance checklist not marked.",
+                suggestion="Confirm type, amount, and time documented.",
+            ))
 
-        if not report.ok and raise_on_error:
-            raise SOAPValidationError(
-                "SOAP validation failed",
-                errors=report.schema_errors + report.grounding_errors + report.cdt_errors,
-                feedback=report.llm_feedback(),
-            )
-        return report
+        # Radiograph justification
+        rads = soap.get("objective", {}).get("radiographs_taken") or []
+        rad_flag = soap.get("compliance", {}).get("tsbde_checklist", {}).get("radiographs_justified")
+        if rads and not rad_flag:
+            out.append(Issue(
+                layer="texas", severity=INFO, path="compliance.tsbde_checklist.radiographs_justified",
+                message="Radiographs taken; ensure justification is documented.",
+                suggestion="Tick the radiographs_justified box in the checklist.",
+            ))
 
-    def _validate_schema(self, soap: Dict[str, Any], report: ValidationReport) -> None:
-        for err in sorted(self._struct_validator.iter_errors(soap), key=lambda e: list(e.path)):
-            path = ".".join(str(p) for p in err.path) or "<root>"
-            report.schema_errors.append(f"{path}: {err.message}")
+        # Controlled substance reminder
+        for i, rx in enumerate(soap.get("plan", {}).get("prescriptions") or []):
+            drug = (rx.get("drug") or "").lower()
+            if any(c in drug for c in ["oxycodone", "hydrocodone", "tramadol", "codeine"]):
+                out.append(Issue(
+                    layer="texas", severity=WARN, path=f"plan.prescriptions[{i}]",
+                    message=f"Controlled substance prescribed ({drug}). Texas PMP check required (HB 2174).",
+                    suggestion="Document PMP check in patient_instructions.",
+                ))
 
-    def _validate_grounding(
-        self,
-        soap: Dict[str, Any],
-        transcript_lines: List[str],
-        report: ValidationReport,
-    ) -> None:
-        spans = (soap.get("grounding") or {}).get("transcript_spans") or []
-        grounded_paths = {s.get("field_path", "") for s in spans}
+        return out
 
-        for path in _GROUNDING_REQUIRED_PATHS:
-            if self._field_populated(soap, path) and not self._has_span_for(path, grounded_paths):
-                report.grounding_errors.append(
-                    f"Field '{path}' is populated but has no entry in grounding.transcript_spans."
-                )
-
-        if transcript_lines:
-            n = len(transcript_lines)
-            for s in spans:
-                idx = s.get("line_index")
-                quote = (s.get("quote") or "").strip()
-                fp = s.get("field_path", "?")
-                if idx is None or not (0 <= idx < n):
-                    report.warnings.append(f"Span for '{fp}' has out-of-range line_index={idx}.")
-                if not quote:
-                    report.warnings.append(f"Span for '{fp}' has empty quote.")
-
-    def _validate_cdt_allow_list(self, soap: Dict[str, Any], report: ValidationReport) -> None:
-        visit_type = (soap.get("encounter_meta") or {}).get("visit_type")
-        if not visit_type:
-            return
-        template = self._visit_templates.get(visit_type) or {}
-        allow = set(template.get("cdt_allow_list") or [])
-        if not allow:
-            return
-
-        plan = soap.get("plan") or {}
-        for bucket in ("procedures_today", "procedures_recommended"):
-            for i, proc in enumerate(plan.get(bucket) or []):
-                code = (proc or {}).get("cdt_code")
-                if code and code not in allow:
-                    report.cdt_errors.append(
-                        f"plan.{bucket}[{i}].cdt_code='{code}' is not in the allow-list "
-                        f"for visit_type='{visit_type}'."
-                    )
-
-    def _validate_texas_rules(self, soap: Dict[str, Any], report: ValidationReport) -> None:
-        meta = soap.get("encounter_meta") or {}
-        loc = meta.get("practice_location") or {}
-        state_code = (
-            (meta.get("provider_license_state") or loc.get("state") or "")
-        ).upper()
-        if state_code != "TX":
-            return
-
-        obj = soap.get("objective") or {}
-        if not (obj.get("radiographic_findings") or "").strip():
-            report.warnings.append(
-                "TX 22 TAC §108.8: radiographic findings missing — required if rads were taken."
-            )
-        if not (soap.get("plan") or {}).get("informed_consent", {}).get("obtained"):
-            report.warnings.append(
-                "TX 22 TAC §108.8: informed consent flag not set — required for invasive procedures."
-            )
-        if not (soap.get("attestation") or {}).get("provider_reviewed"):
-            report.warnings.append(
-                "Provider attestation missing — required before billable sign-off."
-            )
-
-    def _score_signability(self, soap: Dict[str, Any], report: ValidationReport) -> None:
-        score = 1.0
-        score -= 0.20 * min(len(report.schema_errors), 3) / 3
-        score -= 0.30 * min(len(report.grounding_errors), 5) / 5
-        score -= 0.30 * min(len(report.cdt_errors), 3) / 3
-        score -= 0.05 * min(len(report.warnings), 4) / 4
-        report.signability_score = max(0.0, min(1.0, score))
-
-    @staticmethod
-    def _field_populated(soap: Dict[str, Any], path: str) -> bool:
-        cur: Any = soap
-        for part in path.split("."):
-            if isinstance(cur, dict) and part in cur:
-                cur = cur[part]
+    # ---------- scoring ----------
+    def _signability_score(self, issues: list[Issue]) -> int:
+        score = 100
+        for i in issues:
+            if i.severity == ERROR:
+                score -= 25
+            elif i.severity == WARN:
+                score -= 5
             else:
-                return False
-        if cur is None:
-            return False
-        if isinstance(cur, (list, dict, str)) and len(cur) == 0:
-            return False
-        return True
-
-    @staticmethod
-    def _has_span_for(path: str, grounded_paths: set) -> bool:
-        if path in grounded_paths:
-            return True
-        prefix = path + "."
-        return any(gp.startswith(prefix) for gp in grounded_paths)
+                score -= 1
+        return max(0, score)
 
 
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) < 2:
-        print("Usage: python -m core.soap_validator <soap.json> [transcript.txt]")
-        sys.exit(1)
-
-    with open(sys.argv[1], "r", encoding="utf-8") as f:
-        soap_doc = json.load(f)
-
-    transcript: List[str] = []
-    if len(sys.argv) >= 3:
-        with open(sys.argv[2], "r", encoding="utf-8") as f:
-            transcript = [ln.rstrip("\n") for ln in f]
-
-    v = SOAPValidator()
-    rep = v.validate(soap_doc, transcript, raise_on_error=False)
-    print(json.dumps(rep.as_dict(), indent=2))
+def _normalize(text: str) -> str:
+    """Lowercase, collapse whitespace, strip punctuation for grounding match."""
+    text = (text or "").lower()
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text

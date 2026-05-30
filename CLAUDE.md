@@ -1,118 +1,100 @@
-# CLAUDE.md — context for Claude Code sessions
+# DentaScribe — Claude Code Master Instructions
 
-This file is read automatically when Claude Code starts in this repo. Keep it accurate; if you change something fundamental, update this file in the same commit.
+You are working on **DentaScribe**, an AI dental scribe MVP for the **Dallas, Texas** market.
+Read this file at the start of every session.
 
----
+## Product objective
+Trustworthy, auditable AI scribe that takes a dentist–patient conversation and produces:
+1. A structured **SOAP note** (JSON conforming to `soap_schema.json`)
+2. **CDT billing codes** drawn strictly from `data/cdt_allow_list.json`
+3. A **second-opinion** review flagging missed dx, drug interactions, billing gaps
+4. A **TSBDE 22 TAC §108.8** compliance checklist
+5. Exportable PDF / DOCX / JSON for the patient chart
 
-## What this is
+This is **not** an autonomous diagnostic tool. Every output must be reviewed and signed by a licensed dentist.
 
-**DentaScribe** is an MVP AI dental scribe. A doctor and patient have a conversation; DentaScribe transcribes, labels speakers, extracts dental entities, drafts a SOAP note, and suggests CDT 2026 procedure codes. Streamlit UI, runs in a phone browser.
+## Non-negotiable rules
+- **No hallucinated CDT codes.** Coder agent must only return codes present in `data/cdt_allow_list.json`. The validator double-checks.
+- **Grounded SOAP.** Every clinical claim in the SOAP note must include a `source_span` quoting the transcript. The validator rejects ungrounded claims above severity threshold.
+- **Texas compliance.** Patient identifiers, provider license #, date of service, and informed-consent flag are required fields. See `texas_blank_soap_template.json`.
+- **No PHI in logs.** Never write transcripts, patient names, or chart contents to stdout, log files, or error messages outside the SQLite chart store.
+- **BYO API key.** Never hardcode keys. Read `ANTHROPIC_API_KEY` and `DEEPGRAM_API_KEY` from environment or Streamlit sidebar input.
 
-It's the clinical-side counterpart to the front-desk **Dentsi** project (https://github.com/git-bonda108/Dentsi) by the same author. Reuse the brand and palette; don't merge the repos.
+## Tech stack (fixed — do not swap)
+- Python 3.11+
+- **uv** for dependency management (not pip, not poetry)
+- Streamlit for UI
+- Anthropic SDK (`anthropic>=0.40`) — Claude Sonnet 4.5 default (model id `claude-sonnet-4-5`)
+- Deepgram SDK for live STT
+- SQLite for MVP persistence (Postgres migration later)
+- `jsonschema` for schema validation
+- `reportlab` + `python-docx` for exports
 
-## Tech & architecture
-
-- Python 3.10+, Streamlit, SQLite, ReportLab (PDF), python-docx, optional `streamlit-mic-recorder` for browser mic.
-- LLM: Anthropic Claude primary, OpenAI fallback. Unified client in `utils/llm.py`. Demo mode (no keys) is supported and must keep working.
-- STT: OpenAI Whisper default. Deepgram Nova-3 Medical via `STT_PROVIDER=deepgram`.
-- **Agent swarm** in `agents/`. Pipeline is deterministic and sequential, not a graph:
-
-  `Transcription → Diarization → DentalNER → SoapNote → CdtCoder → Validator`
-
-  All agents mutate a shared `SwarmState` (defined in `core/state.py`). Each step appends to `state.agent_trace` — that's user-visible in the UI, treat it as load-bearing.
-
-## Hard rules (do not break without an explicit ask)
-
-1. **Anti-hallucination is the product.** Three layers exist; keep all three:
-   - LLM prompts say "use only facts in the transcript."
-   - `DentalNERAgent` drops any LLM-returned entity whose `span` is not found verbatim in the transcript.
-   - `ValidatorAgent` flags note terms not present in the transcript and surfaces them as Unverified terms.
-   If you add a new agent that produces text, it must be subject to the validator's check.
-
-2. **CDT codes are constrained.** The LLM re-ranks and rationalizes; it never invents codes. The candidate list always comes from `data/cdt_codes_2026.json` via `KEYWORD_MAP` in `agents/cdt_coder.py`. To add coverage, extend the JSON and the keyword map together.
-
-3. **Demo mode must keep working end-to-end.** When no LLM key is set, every agent has a deterministic fallback. The three fixtures in `utils/fixtures.py` are the regression suite — if any of them stops producing a complete SOAP note, that's a bug.
-
-4. **No PHI logging.** `state.agent_trace` is fine (counts, lengths, durations). Don't log transcript or patient name contents.
-
-5. **CDT and dental terminology data come from ADA / cited sources.** Don't fabricate codes. New CDT additions belong in `data/cdt_codes_2026.json` with a comment citing the source. The bundled subset is representative — production must license the full ADA catalog.
-
-## Conventions
-
-- **Adding an agent**: subclass `agents.base.Agent`, implement `run(state) -> state`, register it in `agents/orchestrator.py`'s `self.pipeline` list at the right position. Use `state.log(self.name, "...")` liberally.
-- **Adding an exporter**: new file in `exporters/`, function takes a `state: dict` and returns `bytes`. Wire into the Export tab in `app.py`.
-- **Adding a UI page**: new function in `app.py` returning nothing; register in the sidebar `st.radio` and the bottom router.
-- **Color palette**: never hard-code hex codes. Import from `ui.theme.COLORS`. PDF/DOCX use the same hex values — keep them in sync.
-- **LLM prompts** live next to the agent that uses them. Keep them short, with `Return strict JSON` for structured outputs. Use `LLMClient.complete_json()`, which already handles fenced code blocks.
-
-## Where things live
-
+## Repo layout (target — will be filled by batches 2–6)
 ```
-app.py                  Streamlit entry — UI only, no business logic
-core/config.py          .env → Config dataclass
-core/state.py           SwarmState + nested dataclasses (SoapNote, etc.)
-core/db.py              SQLite store (consultations table; payload as JSON)
-agents/*.py             One agent per file. Strict pipeline contract.
-data/cdt_codes_2026.json    CDT subset. Has _meta with provenance.
-data/dental_terms.json      Terminology bank (teeth 1-32 + lexicons).
-exporters/pdf_export.py     ReportLab — clinical-grade PDF
-exporters/docx_export.py    python-docx — clinical-grade Word
-ui/theme.py             Design tokens (COLORS, SPACING, RADIUS)
-ui/styles.py            Custom CSS injected once at boot
-ui/components.py        hero, card, metric_card, badge, speaker_bubble, soap_block, cdt_chip
-utils/llm.py            Anthropic + OpenAI unified client. Resolution: anthropic → openai → demo.
-utils/fixtures.py       Three curated dental transcripts. Regression suite.
-.streamlit/config.toml  Theme tokens for Streamlit chrome
-```
-
-## Running & testing
-
-```bash
-pip install -r requirements.txt
-cp .env.example .env       # optional — demo mode runs without keys
-streamlit run app.py
-```
-
-End-to-end smoke test (no keys needed):
-
-```python
-import os; os.environ["DENTASCRIBE_DEMO_MODE"] = "true"
-from core.config import load_config
-from core.state import SwarmState
-from agents.orchestrator import Orchestrator
-from utils.fixtures import DEMO_TRANSCRIPTS
-swarm = Orchestrator(load_config())
-for s in DEMO_TRANSCRIPTS:
-    st = SwarmState(patient_name=s["patient_name"], doctor_name=s["doctor_name"])
-    st.raw_transcript = s["transcript"]
-    st = swarm.run(st)
-    assert st.qa.completeness_score >= 0.8, s["patient_name"]
-    assert len(st.cdt_codes) >= 1
-print("OK")
+dentascribe/
+├── CLAUDE.md                      ← you are here
+├── README.md
+├── pyproject.toml                 ← uv-managed
+├── .env.example
+├── .gitignore
+├── app.py                         ← Streamlit entrypoint (batch 6)
+├── core/
+│   ├── llm_client.py              ← Claude wrapper (batch 3)
+│   ├── glossary_loader.py         ← controlled vocab injector (batch 3)
+│   └── soap_validator.py          ← 4-layer validator (batch 3)
+├── prompts/
+│   ├── soap_prompt.py             ← scribe system prompt (batch 3)
+│   └── clinical_prompts.py        ← coder + second-opinion prompts (batch 3)
+├── agents/
+│   ├── swarm.py                   ← orchestrator (batch 4)
+│   ├── clinical_agents.py         ← Scribe + Coder (batch 4)
+│   ├── second_opinion_agent.py    ← rule-based reviewer (batch 4)
+│   └── compliance_agent.py        ← TSBDE checklist (batch 4)
+├── streaming/
+│   └── deepgram_stream.py         ← live mic (batch 5)
+├── audio_pipeline/
+│   └── replay.py                  ← demo-mode scripted player (batch 5)
+├── exports/
+│   └── soap_exporter.py           ← PDF/DOCX/JSON writers (batch 5)
+├── ui/
+│   └── components/
+│       └── widgets.py             ← tooth chart, agent rail, KPI strip (batch 6)
+├── data/
+│   ├── soap_schema.json           ← (batch 2)
+│   ├── texas_blank_soap_template.json   ← (batch 2)
+│   ├── visit_type_templates.json  ← (batch 2)
+│   ├── dental_glossary.json       ← (batch 2)
+│   ├── cdt_allow_list.json        ← (batch 2)
+│   ├── tooth_norm.py              ← (batch 2)
+│   ├── surface_norm.py            ← (batch 2)
+│   └── samples/
+│       ├── case1_emergency_endo_tooth19.txt   ← (batch 5)
+│       └── case2_occlusal_composite_tooth30.txt ← (batch 5)
+├── tests/
+│   └── test_smoke.py              ← grows each batch
+└── docs/
+    ├── DEMO_SCRIPT.md             ← (batch 6)
+    └── CLAUDE_CODE_HANDOFF.md     ← (batch 6)
 ```
 
-If you change any agent, run this before committing.
+## Coding conventions
+- Type hints everywhere. Use `from __future__ import annotations`.
+- Pydantic v2 for any in-memory model that isn't a JSON-schema-validated dict.
+- All Claude calls go through `core/llm_client.py` — never call `anthropic.Anthropic()` directly elsewhere.
+- All prompts live in `prompts/` — never inline a system prompt in agent code.
+- Every agent returns a `dict` with at least: `{"agent": str, "status": "ok"|"error", "output": ..., "trace": [...]}`.
 
-## Known follow-ups (in priority order)
+## How to verify each batch
+Each batch ZIP contains a `BATCH_N_README.md` with:
+1. Files added
+2. Where to put them (always: extract at repo root)
+3. A verification command (e.g. `uv run python -c "import core.llm_client"`)
+Do not advance to batch N+1 until batch N verification passes.
 
-1. **Real diarization.** Replace prefix-parse / LLM attribution with `pyannote 3.1` segmentation, then slice audio for Whisper per-speaker. Wire into `agents/diarization.py` behind a feature flag.
-2. **Auth.** Streamlit Community Cloud auth or a thin OIDC layer. Doctor / hygienist / admin roles. Wire into the sidebar.
-3. **Postgres.** Swap `core/db.py` to SQLAlchemy + Postgres. Keep the same `ConsultationStore` interface so the UI doesn't change.
-4. **Streaming transcription.** Whisper isn't streaming-native; either chunk audio in `streamlit-mic-recorder` (~5s windows) or switch the live tab to Deepgram WebSocket. Doc the trade-off in the UI.
-5. **Tooth charting widget.** A visual 1-32 dental chart (SVG) that highlights teeth named in the transcript. Live on the Consultation page above the Transcript tab.
-6. **Full ADA CDT 2026 license + embedding search.** Replace `KEYWORD_MAP` with an embedding index over the full code catalog. Keep deterministic keyword fallback as a safety net.
-7. **HIPAA path.** Encryption at rest, audit log on every state mutation, BAA-covered STT (Deepgram Nova-3 Medical), and a configurable de-identification pass before any LLM call.
+## Current batch
+**Batch 1 — Foundation.** This batch establishes the repo skeleton, `pyproject.toml`, env files, and this `CLAUDE.md`. No runtime code yet.
 
-## Things that are intentional and look like bugs
-
-- The Transcription agent's `run()` is a near no-op. That's deliberate: audio→text happens out of band via `Orchestrator.transcribe_audio(wav_bytes)` *before* the pipeline executes. The agent only logs / validates the resulting transcript. Don't move STT into the pipeline; it would force every retry to re-bill the STT call.
-- The Validator's `SAFE_BOILERPLATE` set contains scaffolding words used by the *template fallback* SoapNote generator. These are not domain terms — adding more here is fine if you find new false positives in demo mode.
-- `data/cdt_codes_2026.json` is intentionally a subset, not the full ADA catalog. The `_meta.note` field documents this. Don't replace with a fabricated full list.
-
-## Brand / palette
-
-Anchored on Dentsi's `#1E2327` text color. Primary teal `#0EA5A4`, mint `#6FE4D6`, navy `#0B2A4A`, amber `#F59E0B`, red `#DC2626`, green `#16A34A`. Background `#F7FBFC`, surface `#FFFFFF`. All in `ui/theme.py`.
-
----
-
-**When in doubt, read the README.md.** It's the user-facing complement to this file.
+## Two locked test cases (referenced throughout)
+- **Case 1**: Emergency visit. Tooth #19 (lower-left first molar). Irreversible pulpitis. Expected procedures: D0140 (limited exam), D0220 (PA radiograph), D3330 (endo molar) recommended, D9230 (N2O) optional. Patient on lisinopril → ibuprofen interaction flag.
+- **Case 2**: Routine restorative. Tooth #30 (lower-right first molar), occlusal caries. Expected: D0120 (periodic exam), D0274 (bitewings-four), D2391 (resin one-surface posterior).

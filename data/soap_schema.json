@@ -1,408 +1,508 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://dentascribe.ai/schemas/soap.v1.json",
-  "title": "DentaScribe Dental SOAP (US / TSBDE 22 TAC \u00a7108.8 compliant)",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DentaScribe SOAP Note",
   "type": "object",
   "required": [
-    "encounter_meta",
+    "metadata",
     "subjective",
     "objective",
     "assessment",
     "plan",
-    "grounding",
-    "quality_flags",
-    "attestation"
+    "billing",
+    "compliance",
+    "grounding"
   ],
   "properties": {
-    "encounter_meta": {
+    "metadata": {
       "type": "object",
       "required": [
-        "patient_ref",
+        "encounter_id",
+        "date_of_service",
         "provider",
-        "date_iso",
-        "visit_type",
-        "tooth_numbering_system",
-        "practice_location"
+        "patient",
+        "visit_type"
       ],
       "properties": {
-        "patient_ref": {
+        "encounter_id": {
           "type": "string"
+        },
+        "date_of_service": {
+          "type": "string",
+          "format": "date"
         },
         "provider": {
           "type": "object",
           "required": [
             "name",
-            "license_number",
-            "npi",
-            "role"
+            "tsbde_license"
           ],
           "properties": {
             "name": {
               "type": "string"
             },
-            "license_number": {
+            "tsbde_license": {
               "type": "string"
             },
             "npi": {
               "type": "string"
-            },
-            "role": {
-              "type": "string",
-              "enum": [
-                "dentist",
-                "hygienist",
-                "assistant",
-                "specialist"
-              ]
             }
           }
         },
-        "date_iso": {
-          "type": "string",
-          "format": "date"
+        "patient": {
+          "type": "object",
+          "required": [
+            "patient_id",
+            "dob",
+            "consent_on_file"
+          ],
+          "properties": {
+            "patient_id": {
+              "type": "string"
+            },
+            "dob": {
+              "type": "string"
+            },
+            "consent_on_file": {
+              "type": "boolean"
+            },
+            "medical_alerts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "medications": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allergies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         },
         "visit_type": {
           "type": "string",
+          "description": "Both short ('recall') and long ('recall_exam') aliases are accepted. The visit-type templates in data/visit_type_templates.json normalize these.",
           "enum": [
-            "new_patient_comprehensive",
-            "periodic_recall",
-            "emergency_limited",
             "emergency",
+            "emergency_limited",
+            "new_patient_exam",
+            "new_patient_comprehensive",
+            "recall",
+            "recall_exam",
+            "periodic_recall",
+            "restorative",
             "restorative_direct",
             "restorative_indirect",
+            "endo",
             "endodontic",
+            "perio",
             "periodontal_hygiene",
+            "hygiene",
+            "extraction",
             "oral_surgery",
             "ortho_consult",
-            "post_op_followup"
+            "post_op_followup",
+            "other"
           ]
         },
-        "tooth_numbering_system": {
-          "type": "string",
-          "enum": [
-            "Universal",
-            "Palmer",
-            "FDI"
-          ]
-        },
-        "practice_location": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "address": {
-              "type": "string"
-            },
-            "city": {
-              "type": "string"
-            },
-            "state": {
-              "type": "string"
-            },
-            "zip": {
-              "type": "string"
-            }
-          }
+        "clinic": {
+          "type": "object"
         }
       }
     },
     "subjective": {
       "type": "object",
+      "required": [
+        "chief_complaint"
+      ],
       "properties": {
         "chief_complaint": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": "string"
         },
         "hpi": {
-          "type": "object",
-          "properties": {
-            "onset": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "duration": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "character": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "severity_0_10": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "minimum": 0,
-              "maximum": 10
-            },
-            "triggers": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "relieving_factors": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "functional_impact": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
+          "type": "string"
+        },
+        "pain_scale": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10
+        },
+        "pain_quality": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
-        "medical_history_update": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "medications": {
-          "type": "array"
-        },
-        "allergies": {
-          "type": "array"
-        },
-        "dental_history": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "social_history": {
-          "type": "object"
-        },
-        "patient_goals": {
-          "type": [
-            "string",
-            "null"
+        "medical_history_updates": {
+          "description": "Plain narrative OR list of update bullets.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
           ]
         }
       }
     },
     "objective": {
       "type": "object",
+      "required": [
+        "exam_findings"
+      ],
       "properties": {
         "vitals": {
           "type": "object"
         },
-        "extraoral": {
-          "type": "object"
+        "extra_oral": {
+          "type": "string"
         },
-        "intraoral_soft_tissue": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "intra_oral": {
+          "type": "string"
         },
-        "periodontal": {
-          "type": "object"
+        "exam_findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tooth",
+              "finding"
+            ],
+            "properties": {
+              "tooth": {
+                "type": "string",
+                "description": "Universal numbering 1-32 or quadrant"
+              },
+              "surfaces": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "M",
+                    "O",
+                    "D",
+                    "B",
+                    "L",
+                    "F",
+                    "I"
+                  ]
+                }
+              },
+              "finding": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "mild",
+                  "moderate",
+                  "severe",
+                  "none"
+                ]
+              },
+              "source_span": {
+                "type": "string",
+                "description": "Verbatim transcript quote"
+              }
+            }
+          }
         },
-        "hard_tissue_findings": {
-          "type": "array"
+        "radiographs_taken": {
+          "description": "Either short-form strings ('PA #19') or structured findings.",
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "properties": {
+                  "type":        { "type": ["string", "null"] },
+                  "tooth":       { "type": ["string", "null"] },
+                  "findings":    { "type": ["string", "null"] },
+                  "source_span": { "type": ["string", "null"] }
+                }
+              }
+            ]
+          }
         },
-        "occlusion": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "diagnostic_tests": {
-          "type": "object"
-        },
-        "radiographic_findings": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "photos_taken": {
-          "type": "array"
+        "perio_summary": {
+          "type": "string"
         }
       }
     },
     "assessment": {
       "type": "object",
+      "required": [
+        "diagnoses"
+      ],
       "properties": {
-        "primary_diagnosis": {
-          "type": "array"
+        "diagnoses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tooth",
+              "diagnosis"
+            ],
+            "properties": {
+              "tooth": {
+                "type": "string"
+              },
+              "diagnosis": {
+                "type": "string"
+              },
+              "icd10": {
+                "type": "string"
+              },
+              "differential": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "source_span": {
+                "type": "string"
+              }
+            }
+          }
         },
-        "differential": {
-          "type": "array"
-        },
-        "contributing_factors": {
-          "type": "array"
-        },
-        "risk_assessment": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "prognosis": {
+          "type": "string"
         }
       }
     },
     "plan": {
       "type": "object",
+      "required": [
+        "procedures_today",
+        "follow_up"
+      ],
       "properties": {
         "procedures_today": {
           "type": "array",
           "items": {
             "type": "object",
+            "required": [
+              "procedure"
+            ],
             "properties": {
-              "tooth": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
               "procedure": {
                 "type": "string"
               },
-              "cdt_code": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "pattern": "^D[0-9]{4}$"
+              "tooth": {
+                "type": ["string", "null"]
               },
-              "cdt_confidence": {
-                "type": [
-                  "number",
-                  "null"
-                ]
-              },
-              "cdt_rationale": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+              "surfaces": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               "materials": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string"
               },
               "anesthesia": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string"
+              },
+              "source_span": {
+                "type": "string"
               }
             }
           }
         },
-        "procedures_recommended": {
-          "type": "array"
+        "recommended_future": {
+          "description": "Either short-form recommendations or structured items.",
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object" }
+            ]
+          }
         },
         "prescriptions": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "drug",
+              "sig"
+            ],
+            "properties": {
+              "drug": {
+                "type": "string"
+              },
+              "strength": {
+                "type": "string"
+              },
+              "sig": {
+                "type": "string"
+              },
+              "quantity": {
+                "description": "Tablet/cap count — integer or string ('20', '20 tablets').",
+                "type": ["string", "integer"]
+              },
+              "refills": {
+                "type": "integer"
+              },
+              "interaction_checked": {
+                "type": "boolean"
+              }
+            }
+          }
         },
-        "patient_education": {
-          "type": "array"
-        },
-        "informed_consent": {
-          "type": "object"
-        },
-        "referrals": {
-          "type": "array"
-        },
-        "home_care": {
-          "type": "array"
+        "patient_instructions": {
+          "type": "string"
         },
         "follow_up": {
-          "type": "object"
+          "type": "string"
+        }
+      }
+    },
+    "billing": {
+      "type": "object",
+      "required": [
+        "cdt_codes"
+      ],
+      "properties": {
+        "cdt_codes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code"],
+            "properties": {
+              "code": {
+                "description": "Allow null when the Coder agent explicitly declines to bill (no allow-listed code fits).",
+                "oneOf": [
+                  { "type": "string", "pattern": "^D[0-9]{4}$" },
+                  { "type": "null" }
+                ]
+              },
+              "description": { "type": ["string", "null"] },
+              "tooth":       { "type": ["string", "null"] },
+              "surfaces": {
+                "type": ["array", "null"],
+                "items": { "type": "string" }
+              },
+              "rationale":   { "type": ["string", "null"] },
+              "source_span": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "estimated_total": {
+          "type": "number"
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "required": [
+        "tsbde_checklist"
+      ],
+      "properties": {
+        "tsbde_checklist": {
+          "type": "object",
+          "description": "22 TAC \u00a7108.8 Records of the Dental Patient",
+          "properties": {
+            "patient_identification_complete": {
+              "type": "boolean"
+            },
+            "medical_history_reviewed": {
+              "type": "boolean"
+            },
+            "informed_consent_documented": {
+              "type": "boolean"
+            },
+            "diagnosis_documented": {
+              "type": "boolean"
+            },
+            "treatment_plan_documented": {
+              "type": "boolean"
+            },
+            "radiographs_justified": {
+              "type": "boolean"
+            },
+            "anesthetic_documented": {
+              "type": "boolean"
+            },
+            "provider_signature_block_present": {
+              "type": "boolean"
+            }
+          }
+        },
+        "provider_attestation": {
+          "type": "object",
+          "properties": {
+            "signed": {
+              "type": "boolean"
+            },
+            "signed_at": {
+              "type": "string"
+            },
+            "signed_by": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "grounding": {
       "type": "object",
       "required": [
-        "transcript_spans"
+        "transcript_excerpts"
       ],
       "properties": {
-        "transcript_spans": {
+        "transcript_excerpts": {
           "type": "array",
           "items": {
             "type": "object",
             "required": [
-              "field_path",
-              "quote",
-              "line_index"
+              "span_id",
+              "text",
+              "speaker"
             ],
             "properties": {
-              "field_path": {
+              "span_id": {
                 "type": "string"
               },
-              "quote": {
+              "text": {
                 "type": "string"
-              },
-              "line_index": {
-                "type": "integer"
               },
               "speaker": {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                  "provider",
+                  "patient",
+                  "assistant",
+                  "unknown"
+                ]
+              },
+              "t_start": {
+                "type": "number"
+              },
+              "t_end": {
+                "type": "number"
               }
             }
           }
-        }
-      }
-    },
-    "quality_flags": {
-      "type": "object",
-      "properties": {
-        "unverified_terms": {
-          "type": "array"
         },
-        "hallucination_risk": {
-          "type": "array"
-        },
-        "missing_required": {
-          "type": "array"
-        },
-        "signability_score": {
-          "type": "number"
-        }
-      }
-    },
-    "attestation": {
-      "type": "object",
-      "required": [
-        "provider_reviewed",
-        "ai_assisted_disclosure"
-      ],
-      "properties": {
-        "provider_reviewed": {
-          "type": "boolean"
-        },
-        "ai_assisted_disclosure": {
-          "type": "boolean"
-        },
-        "signed_at_iso": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "signature_method": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "ungrounded_claims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

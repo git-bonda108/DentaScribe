@@ -1,70 +1,103 @@
-[
-  "periapical",
-  "apical",
-  "periodontitis",
-  "gingivitis",
-  "prophylaxis",
-  "scaling",
-  "root planing",
-  "pulpitis",
-  "irreversible pulpitis",
-  "reversible pulpitis",
-  "caries",
-  "occlusal",
-  "mesial",
-  "distal",
-  "buccal",
-  "lingual",
-  "facial",
-  "palatal",
-  "furcation",
-  "recession",
-  "mobility",
-  "crown",
-  "onlay",
-  "inlay",
-  "veneer",
-  "endodontic",
-  "periapical radiolucency",
-  "amalgam",
-  "composite",
-  "lithium disilicate",
-  "zirconia",
-  "PFM",
-  "bitewing",
-  "panoramic",
-  "CBCT",
-  "lidocaine",
-  "articaine",
-  "septocaine",
-  "epinephrine",
-  "ibuprofen",
-  "amoxicillin",
-  "clindamycin",
-  "chlorhexidine",
-  "fluoride varnish",
-  "sealant",
-  "bruxism",
-  "temporomandibular joint",
-  "TMJ",
-  "abfraction",
-  "attrition",
-  "erosion",
-  "abscess",
-  "fistula",
-  "draining sinus tract",
-  "extraction",
-  "exodontia",
-  "implant",
-  "abutment",
-  "pontic",
-  "bridge",
-  "denture",
-  "partial",
-  "perio chart",
-  "probing depth",
-  "clinical attachment loss",
-  "CAL",
-  "BOP",
-  "plaque index"
-]
+{
+  "_meta": {
+    "purpose": "Controlled vocabulary fed into the Scribe prompt and used by the validator. Keeps Claude from drifting into non-dental synonyms.",
+    "sources": [
+      "ADA Glossary of Dental Clinical Terms",
+      "AAE Glossary of Endodontic Terms",
+      "AAP terminology"
+    ],
+    "version": "0.1"
+  },
+  "anatomy": {
+    "mesial": "Toward the midline of the dental arch",
+    "distal": "Away from the midline of the dental arch",
+    "buccal": "Cheek-facing surface (posterior teeth)",
+    "facial": "Lip/cheek-facing surface (anterior teeth)",
+    "lingual": "Tongue-facing surface",
+    "occlusal": "Chewing surface of posterior teeth",
+    "incisal": "Biting edge of anterior teeth",
+    "apical": "Toward the root tip",
+    "coronal": "Toward the crown",
+    "furcation": "Area between roots of a multi-rooted tooth"
+  },
+  "conditions": {
+    "caries": "Tooth decay caused by bacterial demineralization",
+    "pulpitis_reversible": "Inflammation of pulp that resolves with stimulus removal",
+    "pulpitis_irreversible": "Symptomatic pulp inflammation requiring endodontic therapy or extraction",
+    "periapical_abscess": "Localized collection of pus at root apex",
+    "gingivitis": "Reversible inflammation of the gingiva without attachment loss",
+    "periodontitis": "Inflammation with attachment loss and bone resorption",
+    "bruxism": "Parafunctional grinding/clenching",
+    "attrition": "Tooth wear from tooth-to-tooth contact",
+    "abrasion": "Tooth wear from foreign object (toothbrush, etc.)",
+    "erosion": "Chemical loss of tooth structure"
+  },
+  "procedures": {
+    "composite": "Tooth-colored resin restoration",
+    "amalgam": "Silver alloy restoration (largely phased out)",
+    "crown": "Full-coverage indirect restoration",
+    "onlay": "Indirect restoration covering one or more cusps",
+    "rct": "Root canal therapy (endodontic treatment)",
+    "scrp": "Scaling and root planing (D4341/D4342)",
+    "prophy": "Adult prophylaxis (D1110)",
+    "extraction_simple": "Erupted tooth removal without sectioning",
+    "extraction_surgical": "Requires elevation of flap or sectioning"
+  },
+  "materials": {
+    "rmgi": "Resin-modified glass ionomer",
+    "gic": "Glass ionomer cement",
+    "zoe": "Zinc oxide eugenol",
+    "n2o": "Nitrous oxide / oxygen sedation"
+  },
+  "anesthetics": {
+    "lidocaine_2_epi_1_100k": "Lidocaine 2% with epinephrine 1:100,000",
+    "articaine_4_epi_1_100k": "Articaine 4% with epinephrine 1:100,000",
+    "septocaine": "Common trade name for articaine 4% w/ epi 1:100k",
+    "marcaine": "Bupivacaine \u2014 long-acting"
+  },
+  "drugs_common": {
+    "ibuprofen": {
+      "class": "NSAID",
+      "watch": [
+        "ckd",
+        "anticoagulant",
+        "ace_inhibitor",
+        "lithium"
+      ]
+    },
+    "acetaminophen": {
+      "class": "analgesic",
+      "watch": [
+        "hepatic_impairment",
+        "warfarin_high_dose"
+      ]
+    },
+    "amoxicillin": {
+      "class": "penicillin",
+      "watch": [
+        "penicillin_allergy"
+      ]
+    },
+    "clindamycin": {
+      "class": "lincosamide",
+      "watch": [
+        "c_diff_risk"
+      ]
+    },
+    "chlorhexidine": {
+      "class": "antiseptic_rinse",
+      "watch": [
+        "staining"
+      ]
+    }
+  },
+  "asr_corrections": {
+    "okeysol": "occlusal",
+    "messeal": "mesial",
+    "destal": "distal",
+    "perry-apical": "periapical",
+    "ferqation": "furcation",
+    "pulpitous": "pulpitis",
+    "amalgum": "amalgam"
+  }
+}
