@@ -1,17 +1,22 @@
-# DentaScribe theme — dental-clean palette
-# Anchored at #1E2327 (matches Dentsi meta-theme-color), teal primary, mint accent.
+# DentaScribe — dark clinical theme. Aligned with ui/theme.py CSS palette.
+# Background ~ deep navy, surface ~ slate, mint-teal primary, off-white text.
 
 [theme]
-base = "light"
-primaryColor = "#0EA5A4"
-backgroundColor = "#F7FBFC"
-secondaryBackgroundColor = "#FFFFFF"
-textColor = "#1E2327"
-font = "sans serif"
+base                     = "dark"
+primaryColor             = "#4DD4AC"
+backgroundColor          = "#0B1220"
+secondaryBackgroundColor = "#121A2B"
+textColor                = "#E5E9F2"
+font                     = "sans serif"
 
 [server]
-headless = true
-runOnSave = true
+headless        = true
+runOnSave       = true
+fileWatcherType = "poll"
 
 [browser]
 gatherUsageStats = false
+
+[client]
+showSidebarNavigation = false
+toolbarMode           = "minimal"
