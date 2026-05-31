@@ -421,29 +421,44 @@ def _render_audit_view(result: dict) -> None:
 # Live agent swarm with st.status
 # ============================================================
 
+# Iconography per agent role. Keeps the swarm visually scannable —
+# each card tells you what's happening at a glance.
+_AGENT_ICONS = {
+    "scribe":         "📝",
+    "compliance":     "🛡️",
+    "coder":          "💼",
+    "validator":      "✅",
+    "second_opinion": "🩺",
+    "secondopinion":  "🩺",
+    "reviewer":       "🩺",
+    "transcription":  "🎙️",
+}
+
+
 def _render_live_swarm_status(audit: list[dict]) -> None:
-    """Per-agent status pills using st.status for the executed run.
-    During execution we'd swap to a true streaming version (P3 task).
-    For now this gives an at-a-glance scoreboard with timings.
+    """Animated agent status cards with role-specific icons + glow on success.
+    Uses agent_card_html() from the design system for consistent styling.
     """
+    from ui.theme import agent_card_html
     if not audit:
         return
-    cols = st.columns(len(audit))
-    for col, r in zip(cols, audit):
+    cards = []
+    for r in audit:
+        agent_key = (r.get("agent") or "").lower().replace(" ", "_")
+        icon = _AGENT_ICONS.get(agent_key, "•")
+        # Demo-mode rows show up as status="ok" with llm_status="demo".
+        # Make them look successful (they completed) but use the demo icon.
         status = (r.get("status") or "idle").lower()
-        agent = (r.get("agent") or "?").replace("_", " ").title()
+        if r.get("llm_status") == "demo" and status == "idle":
+            status = "ok"
         toks = (r.get("input_tokens") or 0) + (r.get("output_tokens") or 0)
         dur = r.get("duration_ms", 0)
-        icon = {"ok":"✅", "error":"❌", "warn":"⚠️", "demo":"🎯"}.get(status, "•")
-        col.markdown(
-            f"<div style='border:1px solid #1F2A44;border-radius:10px;padding:10px;"
-            f"background:#121A2B;text-align:center;'>"
-            f"<div style='font-size:18px;'>{icon}</div>"
-            f"<div style='font-size:12px;font-weight:600;color:#E5E9F2;margin-top:2px;'>{agent}</div>"
-            f"<div style='font-size:10px;color:#9AA6B8;margin-top:2px;'>{dur} ms · {toks} tok</div>"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
+        cards.append(agent_card_html(r.get("agent","?"), status, toks, dur, icon))
+
+    # Render in equal-width columns so it scales 4–7 agents cleanly.
+    cols = st.columns(len(cards))
+    for col, html in zip(cols, cards):
+        col.markdown(html, unsafe_allow_html=True)
 
 
 # ============================================================
