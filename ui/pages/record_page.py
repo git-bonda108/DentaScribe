@@ -496,8 +496,18 @@ def render() -> None:
             if up is not None:
                 transcript_text = _transcribe_uploaded_audio(up)
         with tab_mic:
-            st.caption("Live mic streaming — coming in P3 (Deepgram WebSocket + "
-                       "`streamlit-mic-recorder`).")
+            # Live WebRTC mic capture + Coach pane. Component owns its own
+            # session state; we just hand it the toggles.
+            from ui.components.live_recording import render_live_recording
+            coach_enabled = st.session_state.get("ds_coach_enabled", True)
+            demo_mode_now = st.session_state.get("ds_mode", "Demo") == "Demo"
+            render_live_recording(coach_enabled=coach_enabled,
+                                   demo_mode=demo_mode_now)
+            # When the live pane hands off, pre-fill the run transcript so
+            # the user can click Run agent swarm.
+            handed = st.session_state.get("live_handed_off_text")
+            if handed:
+                transcript_text = handed
         with tab_tts:
             transcript_text = _render_tts_synthesis_tab() or transcript_text
 
@@ -584,7 +594,8 @@ def render() -> None:
     blank_template = _load_blank_template()
     with st.container(border=True):
         st.markdown("##### 📤  Export")
-        render_export_buttons(soap if soap else None, att, blank_template)
+        render_export_buttons(soap if soap else None, att, blank_template,
+                               validation=validation)
 
     if att:
         st.success(f"Signed by {att['provider_name']} at {att['signed_at']}")

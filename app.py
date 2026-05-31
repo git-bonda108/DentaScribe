@@ -143,6 +143,36 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
+    # Coach mode toggle — the live recording pane fires the Dental Coach
+    # agent on speaker-turn change or every 15s. ~5–8 extra LLM calls per
+    # consultation (~$0.10–0.20 in Live mode). Off → zero coach overhead.
+    _sidebar_section_label("Coaching")
+    coach_on = st.toggle(
+        "🩺  Coach mode",
+        value=st.session_state.get("ds_coach_enabled", True),
+        help=("Surfaces drug interactions, history gaps, diagnostic tests, "
+              "documentation misses, and CDT codes accumulating — live, "
+              "during the recording. Turn off to disable Claude calls during "
+              "live recording."),
+    )
+    st.session_state["ds_coach_enabled"] = coach_on
+    if coach_on:
+        st.markdown(
+            '<div style="margin:6px 12px;font-size:11px;color:#9AA6B8;line-height:1.45;">'
+            'Trigger · speaker change OR every 15s<br>'
+            'Tools · drug-interaction · CDT · pulpal-status · TSBDE-anchor · glossary<br>'
+            '<span style="color:#6B7790;">≈ +$0.10–0.20 per consultation in Live mode</span>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            '<div style="margin:6px 12px;font-size:11px;color:#6B7790;line-height:1.45;">'
+            'Coach is silent. Recording + transcript still work; just no '
+            'live recommendations.</div>',
+            unsafe_allow_html=True,
+        )
+
     # Last-run cost chip
     last_cost = st.session_state.get("ds_last_cost")
     if last_cost is not None:
