@@ -1,19 +1,23 @@
-"""Live recording component — WebRTC mic + Coach-on-the-left, Transcript-on-the-right.
+"""Live recording component — WebRTC mic → polled audio_receiver → Deepgram.
 
-Reads frames via `streamlit-webrtc`, accumulates them in a session-scoped
-`LiveAudioBuffer`, drains 2-sec chunks through Deepgram, and triggers the
-`DentalCoach` agent on speaker-turn change OR after a 15-second silence
-ceiling — debounced to keep Claude cost predictable.
+Architecture that actually works:
 
-The UI is the two-pane view the user explicitly asked for:
+  1. `webrtc_streamer(mode=SENDONLY)` opens the mic.
+  2. We poll `ctx.audio_receiver.get_frames(timeout=...)` from the Streamlit
+     thread — NO processor class, NO threads. Frames go into the buffer.
+  3. The transcript pane is an `@st.fragment(run_every="1s")` — Streamlit
+     re-runs ONLY that pane every 1 second. The WebRTC widget itself
+     stays mounted (no full-page reruns, no pale screen).
+  4. Every fragment tick: poll frames → drain buffered audio → re-render.
+  5. Coach agent fires on speaker-turn change OR 15-second ceiling.
 
-    ┌──────────────────────┬──────────────────────┐
-    │  🩺  LIVE COACHING   │  💬  LIVE TRANSCRIPT │
-    │  (left, real-time)   │  (right, rolling)    │
-    └──────────────────────┴──────────────────────┘
-
-This is rendered as a Streamlit fragment so it auto-refreshes ~every second
-without re-running the entire record page.
+Key fix vs the earlier version:
+  - The old `time.sleep + st.rerun()` loop was the pale-screen culprit.
+    Reruns destroyed the WebRTC context and froze the UI under the
+    "running" overlay.
+  - Audio-only frames arrive on `audio_receiver`, not via `recv()` on a
+    processor class.
+  - Smaller 1-sec window → snappier perceived latency.
 """
 from __future__ import annotations
 import time
@@ -22,62 +26,70 @@ from typing import Optional
 import streamlit as st
 
 
-# Trigger cadence (per user spec): turn change OR 15s ceiling
-TURN_CHANGE_DEBOUNCE_S = 2.0   # min seconds between coach calls when triggered by turn change
-TURN_TIMEOUT_CEILING_S = 15.0  # force-fire after this even without turn change
+TURN_CHANGE_DEBOUNCE_S = 2.0
+TURN_TIMEOUT_CEILING_S = 15.0
+FRAGMENT_REFRESH_SECS  = "1s"     # transcript pane auto-refresh cadence
 
+
+# ===========================================================================
+# Top-level entry
+# ===========================================================================
 
 def render_live_recording(coach_enabled: bool = True, demo_mode: bool = True) -> None:
-    """Top-level entry point for the Live mic tab. Renders the WebRTC widget
-    and the two-pane Coach + Transcript layout. State persists in
-    `st.session_state` so tab switches don't kill the recording.
+    """Mount the WebRTC widget + the live two-pane view.
+
+    The widget itself stays mounted across reruns (Streamlit caches it by
+    `key="ds_live_mic"`). The transcript and coach panes auto-refresh via
+    `st.fragment`, which DOESN'T re-run the WebRTC widget.
     """
-    # Late import — streamlit_webrtc is optional at install time
     try:
-        from streamlit_webrtc import (
-            webrtc_streamer, WebRtcMode, RTCConfiguration,
-        )
-        from audio.live_streaming import LiveAudioBuffer, make_audio_processor
+        from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
+        from audio.live_streaming import LiveAudioBuffer
     except ImportError as e:
         st.error(f"Live recording requires `streamlit-webrtc`. Install with: "
                   f"`pip install streamlit-webrtc`. Error: {e}")
         return
 
-    # --- Session state ----------------------------------------------------
+    # ----- session state init (idempotent) ----------------------------
     if "live_buffer" not in st.session_state:
-        st.session_state["live_buffer"] = LiveAudioBuffer(window_secs=2.0)
+        st.session_state["live_buffer"] = LiveAudioBuffer(window_secs=1.0)
     if "live_recommendations" not in st.session_state:
         st.session_state["live_recommendations"] = []
     if "live_coach_last_fired" not in st.session_state:
         st.session_state["live_coach_last_fired"] = 0.0
     if "live_last_speaker" not in st.session_state:
         st.session_state["live_last_speaker"] = None
+    if "live_started_at" not in st.session_state:
+        st.session_state["live_started_at"] = 0.0
 
-    buffer = st.session_state["live_buffer"]
-
-    # --- Controls + status pill -------------------------------------------
-    cols = st.columns([3, 1, 1])
-    cols[0].caption(
-        "🎙️ Click **Start** to begin recording. Audio streams over WebRTC, "
-        "every 2 sec gets transcribed by Deepgram, and the **Coach** on the "
-        "left calls out anything the doctor might miss — drug interactions, "
-        "history gaps, diagnostic tests to consider, billing codes accumulating."
+    # ----- Header + controls ------------------------------------------
+    st.markdown(
+        '<div style="margin-bottom:14px;">'
+        '<div style="font-size:13px;color:#5A6478;line-height:1.5;">'
+        'Click <b>Start</b> below to begin recording. Audio streams to Deepgram '
+        'in 1-second windows; the transcript on the right updates as you speak '
+        'and the coach on the left flags anything the doctor might miss.'
+        '</div></div>',
+        unsafe_allow_html=True,
     )
-    if cols[1].button("🔄  Clear", use_container_width=True):
-        buffer.reset()
+
+    cols = st.columns([2, 1, 1])
+    if cols[1].button("🔄  Clear", use_container_width=True, key="ds_live_clear"):
+        st.session_state["live_buffer"].reset()
         st.session_state["live_recommendations"] = []
         st.session_state["live_coach_last_fired"] = 0.0
         st.session_state["live_last_speaker"] = None
+        st.toast("Cleared")
         st.rerun()
     if cols[2].button("📋  Use as transcript", use_container_width=True,
-                       help="Hand the rolling transcript to the agent swarm for the full SOAP run.",
-                       disabled=not buffer.segments):
-        st.session_state["live_handed_off_text"] = buffer.total_transcript_text
-        st.toast("Transcript handed to the swarm. Switch to Paste tab and click Run.")
+                       key="ds_live_handoff",
+                       disabled=not st.session_state["live_buffer"].segments,
+                       help="Hand the rolling transcript to the agent swarm."):
+        st.session_state["live_handed_off_text"] = \
+            st.session_state["live_buffer"].total_transcript_text
+        st.toast("Transcript handed off to the swarm.")
 
-    # --- WebRTC widget ----------------------------------------------------
-    # Free Google STUN — for production deployment a TURN server is needed
-    # behind a corporate NAT. Document that as a P5 ops task.
+    # ----- WebRTC widget (audio_receiver pattern) ---------------------
     rtc_config = RTCConfiguration({"iceServers": [
         {"urls": ["stun:stun.l.google.com:19302"]}
     ]})
@@ -87,45 +99,94 @@ def render_live_recording(coach_enabled: bool = True, demo_mode: bool = True) ->
         mode=WebRtcMode.SENDONLY,
         rtc_configuration=rtc_config,
         media_stream_constraints={"audio": True, "video": False},
-        audio_processor_factory=make_audio_processor(buffer),
-        async_processing=True,
+        audio_receiver_size=1024,
+        async_processing=False,
     )
 
-    # --- Drain + maybe-fire-coach (only while playing) --------------------
-    # This block runs each Streamlit rerun. We drain ALL ready chunks (could
-    # be 0 or several), then evaluate the coach trigger.
-    new_segments = []
-    if ctx and ctx.state.playing:
-        # Drain all whole windows available right now
+    # Mark the recording start time the first time playback begins
+    if ctx and ctx.state.playing and not st.session_state["live_started_at"]:
+        st.session_state["live_started_at"] = time.time()
+        st.toast("Recording started · speak now", icon="🎙️")
+
+    # ----- Diagnostic strip + two-pane layout (auto-refreshing) -------
+    # Both fragments re-run independently every 1s — without re-mounting
+    # the WebRTC widget above. This is what fixes the pale-screen issue.
+    _diag_and_drain_fragment(ctx, coach_enabled=coach_enabled, demo_mode=demo_mode)
+
+    left, right = st.columns([1, 1], gap="medium")
+    with left:
+        _coach_pane_fragment(coach_enabled=coach_enabled)
+    with right:
+        _transcript_pane_fragment()
+
+
+# ===========================================================================
+# Fragment 1 — diagnostic strip + audio drain + coach trigger
+# ===========================================================================
+
+@st.fragment(run_every=FRAGMENT_REFRESH_SECS)
+def _diag_and_drain_fragment(ctx, *, coach_enabled: bool, demo_mode: bool) -> None:
+    """Every 1 second: poll frames from audio_receiver, drain windows
+    through Deepgram, fire the coach if conditions are met, and render
+    a small diagnostic strip so the user can SEE the pipeline working.
+    """
+    buffer = st.session_state["live_buffer"]
+
+    # --- 1. Poll frames (non-blocking-ish: 0.05s queue timeout) -------
+    new_segments_this_tick = []
+    if ctx and ctx.state.playing and ctx.audio_receiver:
+        try:
+            frames = ctx.audio_receiver.get_frames(timeout=0.05)
+        except Exception:
+            frames = []
+        if frames:
+            buffer.ingest_frames(frames)
+
+        # Drain ALL full windows currently available (may be 0 or several)
         while buffer.has_enough_audio():
             chunk_new = buffer.drain_chunks()
-            new_segments.extend(chunk_new)
+            new_segments_this_tick.extend(chunk_new)
             if not chunk_new:
                 break
 
-    # Trigger coach
+    # --- 2. Maybe-fire coach ------------------------------------------
     if coach_enabled and buffer.segments:
-        _maybe_fire_coach(buffer, demo_mode=demo_mode, new_segments=new_segments)
+        _maybe_fire_coach(buffer, demo_mode=demo_mode,
+                          new_segments=new_segments_this_tick)
 
-    # --- Two-pane layout --------------------------------------------------
-    st.markdown("&nbsp;", unsafe_allow_html=True)
-    left, right = st.columns([1, 1])
+    # --- 3. Diagnostic strip ------------------------------------------
+    is_playing = bool(ctx and ctx.state.playing)
+    dot = ("#0EA5A4" if is_playing else "#8A95AB")
+    dot_label = ("● RECORDING" if is_playing else "○ Idle — click Start")
 
-    with left:
-        _render_coach_pane(coach_enabled)
-    with right:
-        _render_live_transcript_pane(buffer)
-
-    # --- Footer (auto-refresh hint) ---------------------------------------
-    if ctx and ctx.state.playing:
-        st.caption(
-            f"● Recording  ·  {len(buffer.segments)} segments  ·  "
-            f"{buffer.chunk_count} chunks  ·  buffer "
-            f"{buffer.total_seconds_buffered:.1f}s ahead"
+    err_html = ""
+    if buffer.last_error:
+        err_html = (
+            f'<div style="font-size:11px;color:#B91C1C;background:rgba(185,28,28,0.05);'
+            f'border:1px solid rgba(185,28,28,0.20);padding:6px 10px;border-radius:6px;'
+            f'margin-top:6px;">⚠ {buffer.last_error}</div>'
         )
-        # Lightweight self-rerun every ~1s to pull new audio in
-        time.sleep(1.0)
-        st.rerun()
+
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:18px;padding:10px 16px;'
+        f'background:#FBFCFD;border:1px solid #EEF1F5;border-radius:10px;'
+        f'box-shadow:0 1px 2px rgba(11,20,38,0.04);margin:14px 0 18px;">'
+        f'  <div style="display:inline-flex;align-items:center;gap:8px;">'
+        f'    <span style="width:8px;height:8px;border-radius:50%;background:{dot};'
+        f'                 {"box-shadow:0 0 8px " + dot + "aa;animation:ds-pulse 1.5s infinite;" if is_playing else ""}"></span>'
+        f'    <span style="font-size:11px;font-weight:700;color:{dot};'
+        f'                 letter-spacing:0.10em;">{dot_label}</span>'
+        f'  </div>'
+        f'  <div style="font-size:11px;color:#5A6478;display:flex;gap:18px;'
+        f'              font-family:\'JetBrains Mono\',monospace;">'
+        f'    <span>frames <b style="color:#0B1426;">{buffer.total_frames}</b></span>'
+        f'    <span>chunks <b style="color:#0B1426;">{buffer.total_chunks}</b></span>'
+        f'    <span>segments <b style="color:#0B1426;">{len(buffer.segments)}</b></span>'
+        f'    <span>buffered <b style="color:#0B1426;">{buffer.total_seconds_buffered:.1f}s</b></span>'
+        f'  </div>'
+        f'</div>{err_html}',
+        unsafe_allow_html=True,
+    )
 
 
 # ===========================================================================
@@ -133,13 +194,11 @@ def render_live_recording(coach_enabled: bool = True, demo_mode: bool = True) ->
 # ===========================================================================
 
 def _maybe_fire_coach(buffer, *, demo_mode: bool, new_segments: list) -> None:
-    """Decide whether to invoke the coach this rerun, and if so, do it."""
+    """Decide whether to invoke the coach this tick."""
     now = time.time()
     last_fired = st.session_state["live_coach_last_fired"]
     last_speaker = st.session_state["live_last_speaker"]
 
-    # Speaker-turn change detector: did the last segment add come from a
-    # speaker different from the previous one?
     speaker_changed = False
     if new_segments:
         most_recent_speaker = new_segments[-1].speaker
@@ -147,24 +206,18 @@ def _maybe_fire_coach(buffer, *, demo_mode: bool, new_segments: list) -> None:
             speaker_changed = True
         st.session_state["live_last_speaker"] = most_recent_speaker
 
-    # Time ceiling: if no fire in the last 15s and we have ANY transcript,
-    # call the coach anyway (catches long monologues).
     elapsed = now - last_fired
     time_ceiling_hit = elapsed >= TURN_TIMEOUT_CEILING_S and bool(buffer.segments)
-
-    # First-call rule: if we've never fired and we have any transcript, fire.
     first_call = last_fired == 0.0 and bool(buffer.segments)
 
-    should_fire = first_call or (speaker_changed and elapsed >= TURN_CHANGE_DEBOUNCE_S) \
-                   or time_ceiling_hit
-    if not should_fire:
+    if not (first_call or (speaker_changed and elapsed >= TURN_CHANGE_DEBOUNCE_S)
+            or time_ceiling_hit):
         return
 
     transcript_text = buffer.total_transcript_text
     if not transcript_text:
         return
 
-    # Build the coach (cached across reruns)
     if "live_coach_instance" not in st.session_state:
         from core.llm_client import LLMClient
         from agents.coach_agent import DentalCoach
@@ -175,24 +228,23 @@ def _maybe_fire_coach(buffer, *, demo_mode: bool, new_segments: list) -> None:
 
     try:
         recs = coach.coach(transcript_text, visit_type="emergency")
+        started_at = st.session_state.get("live_started_at") or now
         for r in recs:
             st.session_state["live_recommendations"].append({
                 **r.to_dict(),
-                "fired_at_sec": round(now - (st.session_state.get("live_started_at") or now), 1),
+                "fired_at_sec": round(now - started_at, 1),
             })
-        if recs:
-            st.toast(f"🩺 Coach: {len(recs)} new recommendation(s)", icon="🩺")
     except Exception as e:
-        st.warning(f"Coach call failed: {e}")
+        # Surface coach failures into the diagnostic strip via buffer.last_error
+        st.session_state["live_buffer"].last_error = f"coach: {e}"[:160]
 
     st.session_state["live_coach_last_fired"] = now
 
 
 # ===========================================================================
-# Left pane — live coaching recommendations
+# Fragment 2 — coach pane (auto-refreshing)
 # ===========================================================================
 
-# Per-category icon + tint — light-theme palette aligned with ui/theme.py.
 _CAT_META = {
     "safety":        ("🚨", "#B91C1C", "rgba(185,28,28,0.04)"),
     "history_gap":   ("📝", "#B45309", "rgba(180,83,9,0.04)"),
@@ -202,8 +254,10 @@ _CAT_META = {
 }
 
 
-def _render_coach_pane(coach_enabled: bool) -> None:
-    """Left pane — live coaching recommendations. Arini-toned (light) palette."""
+@st.fragment(run_every=FRAGMENT_REFRESH_SECS)
+def _coach_pane_fragment(*, coach_enabled: bool) -> None:
+    """Left pane — live coaching cards. Re-renders every 1s without
+    touching the WebRTC widget."""
     badge_html = (
         '<span style="font-size:10px;color:#0B8786;background:#E6F8F6;'
         'border:1px solid rgba(14,165,164,0.30);padding:3px 9px;border-radius:999px;'
@@ -218,8 +272,7 @@ def _render_coach_pane(coach_enabled: bool) -> None:
         '<span style="font-size:18px;">🩺</span>'
         '<span style="font-size:14px;font-weight:600;color:#0B1426;letter-spacing:-0.005em;">'
         'Live coaching</span>'
-        + badge_html
-        + '</div>',
+        + badge_html + '</div>',
         unsafe_allow_html=True,
     )
 
@@ -234,8 +287,8 @@ def _render_coach_pane(coach_enabled: bool) -> None:
             '<div style="padding:16px 18px;border-radius:12px;background:#FBFCFD;'
             'border:1px solid #EEF1F5;color:#5A6478;font-size:13px;'
             'box-shadow:0 1px 2px rgba(11,20,38,0.04);">'
-            'Waiting for transcript… recommendations will appear here as the doctor '
-            'and patient speak.</div>',
+            'Waiting for transcript… recommendations will appear here as the '
+            'doctor and patient speak.</div>',
             unsafe_allow_html=True,
         )
         return
@@ -249,7 +302,6 @@ def _render_coach_pane(coach_enabled: bool) -> None:
         quote = r.get("evidence_quote") or ""
         tool = r.get("tool_used") or ""
         fired_at = r.get("fired_at_sec")
-
         html = (
             f'<div style="background:#FFFFFF;border:1px solid #EEF1F5;'
             f'border-left:3px solid {fg};border-radius:10px;padding:14px 16px;'
@@ -267,8 +319,8 @@ def _render_coach_pane(coach_enabled: bool) -> None:
             + (f'  <div style="font-size:13px;color:#5A6478;line-height:1.5;">↳ {action}</div>'
                if action else "")
             + (f'  <div style="border-left:2px solid {fg};padding:5px 10px;margin-top:10px;'
-               f'              background:{bg};font-size:12px;'
-               f'              color:#5A6478;font-style:italic;border-radius:0 6px 6px 0;">'
+               f'              background:{bg};font-size:12px;color:#5A6478;'
+               f'              font-style:italic;border-radius:0 6px 6px 0;">'
                f'    "{quote}"</div>' if quote else "")
             + (f'  <div style="font-size:10px;color:#8A95AB;margin-top:8px;'
                f'              font-family:\'JetBrains Mono\',monospace;">tool: {tool}</div>'
@@ -279,11 +331,13 @@ def _render_coach_pane(coach_enabled: bool) -> None:
 
 
 # ===========================================================================
-# Right pane — rolling live transcript
+# Fragment 3 — transcript pane (auto-refreshing)
 # ===========================================================================
 
-def _render_live_transcript_pane(buffer) -> None:
-    """Right pane — rolling transcript. Light-theme palette."""
+@st.fragment(run_every=FRAGMENT_REFRESH_SECS)
+def _transcript_pane_fragment() -> None:
+    """Right pane — rolling transcript bubbles. Auto-refreshes."""
+    buffer = st.session_state.get("live_buffer")
     st.markdown(
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
         '<span style="font-size:18px;">💬</span>'
@@ -291,18 +345,18 @@ def _render_live_transcript_pane(buffer) -> None:
         'Live transcript</span>'
         '<span style="font-size:10px;color:#5A6478;background:#F4F6F9;'
         'border:1px solid #DDE3EC;padding:3px 9px;border-radius:999px;'
-        f'font-weight:700;letter-spacing:0.10em;">{len(buffer.segments)} TURN(S)</span>'
+        f'font-weight:700;letter-spacing:0.10em;">{len(buffer.segments) if buffer else 0} TURN(S)</span>'
         '</div>',
         unsafe_allow_html=True,
     )
 
-    if not buffer.segments:
+    if not buffer or not buffer.segments:
         st.markdown(
             '<div style="padding:16px 18px;border-radius:12px;background:#FBFCFD;'
             'border:1px solid #EEF1F5;color:#5A6478;font-size:13px;'
             'box-shadow:0 1px 2px rgba(11,20,38,0.04);">'
             'No speech captured yet. Click <b>Start</b> on the recorder above and '
-            'speak — every 2 seconds the transcript will update here.</div>',
+            'speak — the transcript will update here within ~1.5 seconds.</div>',
             unsafe_allow_html=True,
         )
         return
@@ -316,8 +370,10 @@ def _render_live_transcript_pane(buffer) -> None:
         else:
             avatar, role = "💬", "assistant"
         with st.chat_message(role, avatar=avatar):
-            st.markdown(f"**{(seg.speaker or 'Unknown').title()}**  "
-                         f"<span style='font-size:10px;color:#8A95AB;font-family:"
-                         f"\"JetBrains Mono\",monospace;'>chunk #{seg.chunk_idx}</span>",
-                         unsafe_allow_html=True)
+            st.markdown(
+                f"**{(seg.speaker or 'Unknown').title()}**  "
+                f"<span style='font-size:10px;color:#8A95AB;font-family:"
+                f"\"JetBrains Mono\",monospace;'>chunk #{seg.chunk_idx}</span>",
+                unsafe_allow_html=True,
+            )
             st.write(seg.text)
