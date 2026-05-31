@@ -72,9 +72,25 @@ def is_available() -> bool:
 
 # ---------- 1) demo / paste mode ----------
 
-def transcribe_demo(text: str) -> Transcript:
-    """Build a Transcript from a pasted Doctor/Patient text block."""
-    return Transcript.from_plain_text(text or "")
+def transcribe_demo(text: str, post_correct: bool = True) -> Transcript:
+    """Build a Transcript from a pasted Doctor/Patient text block.
+
+    `post_correct=True` (default) runs the dental glossary's ASR-corrections
+    dictionary + phonetic fuzzy correction over each segment. Demo input is
+    typically clean prose, but this keeps the demo path symmetric with
+    the live audio path so users see corrections fire when they paste
+    realistic STT mishears.
+    """
+    transcript = Transcript.from_plain_text(text or "")
+    if post_correct and transcript.segments:
+        try:
+            from audio.post_correction import correct_segments
+            audit = correct_segments(transcript.segments)
+            if audit:
+                transcript.corrections = audit  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    return transcript
 
 
 # ---------- 2) file / non-streaming mode ----------
@@ -126,6 +142,18 @@ def transcribe_file(audio_path: str, model: str = "nova-2-medical",
     )
     resp = client.listen.rest.v("1").transcribe_file({"buffer": buffer}, options)
     transcript = _parse_prerecorded(resp.to_dict())
+
+    # Post-STT lexical / phonetic correction against the dental glossary.
+    # Runs in-place on each segment's text; aggregated audit attached to
+    # the Transcript for the trace / UI.
+    try:
+        from audio.post_correction import correct_segments
+        correction_audit = correct_segments(transcript.segments)
+        if correction_audit:
+            transcript.corrections = correction_audit  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
     if quality_report is not None:
         # Stash on the Transcript so callers can surface it in the UI/trace.
         transcript.audio_quality = quality_report  # type: ignore[attr-defined]
