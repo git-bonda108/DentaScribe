@@ -44,15 +44,17 @@ try:
 except Exception:
     pass
 
-from ui.pages.record_page import render as render_record
-from ui.pages.audit_page  import render as render_audit
-from ui.pages.admin_page  import render as render_admin
+from ui.pages.record_page         import render as render_record
+from ui.pages.audit_page          import render as render_audit
+from ui.pages.admin_page          import render as render_admin
+from ui.pages.how_it_works_page   import render as render_how
 
 
 PAGES = {
-    "🩺  Record":  render_record,
-    "📜  Audit":   render_audit,
-    "⚙️  Admin":   render_admin,
+    "🩺  Record":         render_record,
+    "📜  Audit":          render_audit,
+    "⚙️  Admin":          render_admin,
+    "💡  How it works":   render_how,
 }
 
 
@@ -68,16 +70,33 @@ def _sidebar_brand() -> None:
     dot_bg    = "rgba(14,165,164,0.10)" if is_live else "rgba(138,149,171,0.10)"
     dot_brdr  = "rgba(14,165,164,0.25)" if is_live else "rgba(138,149,171,0.25)"
 
+    # SVG note-taking icon — cleaner than the tooth emoji, scales crisply,
+    # matches the "AI scribe" identity (pen on paper).
+    notes_svg = (
+        '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" '
+        'xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">'
+        '<rect x="4" y="3" width="14" height="18" rx="2.4" '
+        'stroke="#0B1426" stroke-width="1.8"/>'
+        '<path d="M8 8h6M8 12h6M8 16h3" stroke="#0B1426" '
+        'stroke-width="1.8" stroke-linecap="round"/>'
+        '<path d="M16.5 5.5l2.7-1.4 1.7 3.2-2.7 1.4-1.7-3.2z" '
+        'fill="#0EA5A4" stroke="#0B8786" stroke-width="0.8" '
+        'stroke-linejoin="round"/>'
+        '<path d="M16.5 5.5l-1.5 4.5 3-1.4" stroke="#0B8786" '
+        'stroke-width="0.8" stroke-linejoin="round" fill="none"/>'
+        '</svg>'
+    )
     st.markdown(
         f'<div style="padding:18px 12px 4px 12px;">'
         f'  <div style="display:flex;align-items:center;gap:12px;">'
-        f'    <div style="font-size:28px;line-height:1;">🦷</div>'
+        f'    {notes_svg}'
         f'    <div>'
         f'      <div style="font-weight:700;color:#0B1426;font-size:18px;'
         f'                  letter-spacing:-0.02em;line-height:1;font-family:'
         f"'Inter Tight','Inter',sans-serif;\">DentaScribe</div>"
-        f'      <div style="font-size:11px;color:#5A6478;letter-spacing:0.04em;'
-        f'                  margin-top:3px;">Dallas, TX · 22 TAC §108.8</div>'
+        f'      <div style="font-size:10.5px;color:#8A95AB;letter-spacing:0.10em;'
+        f'                  margin-top:5px;font-weight:600;text-transform:uppercase;">'
+        f'        Clinical AI scribe</div>'
         f'    </div>'
         f'  </div>'
         f'  <div style="display:inline-flex;align-items:center;gap:6px;'
@@ -138,19 +157,10 @@ with st.sidebar:
                 '<div style="margin:6px 12px;font-size:11px;color:#5A6478;line-height:1.5;">'
                 'Model · <code style="color:#0B1426;background:#F4F6F9;padding:1px 5px;border-radius:4px;">'
                 'claude-sonnet-4-5</code><br>'
-                'Pricing · $3 / Mtok in, $15 / Mtok out<br>'
                 '<span style="color:#8A95AB;">≈ $0.02–$0.10 per consultation</span>'
                 '</div>',
                 unsafe_allow_html=True,
             )
-    else:
-        st.markdown(
-            '<div style="margin:6px 12px;font-size:11px;color:#5A6478;line-height:1.5;">'
-            'Locked fixtures · $0 · ~0 ms<br>'
-            '<span style="color:#8A95AB;">Same code path as Live, with the LLM stubbed.</span>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
 
     # Coach mode toggle — live recording recommendations
     _sidebar_section_label("Coaching")

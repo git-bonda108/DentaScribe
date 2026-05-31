@@ -87,6 +87,8 @@ GLOBAL_CSS = """
      ========================================================= */
   @import url('https://rsms.me/inter/inter.css');
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+  /* Oswald — bold, condensed editorial display face for the headline */
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
 
   :root {
     /* Surfaces — light, layered (page → cards → raised) */
@@ -194,32 +196,48 @@ GLOBAL_CSS = """
   }
 
   /* =========================================================
-     3. Hero — white, generous whitespace, big clinical headline
+     3. Hero — editorial display headline (Oswald), restrained layout
      ========================================================= */
   .ds-hero {
     position: relative;
-    padding: 44px 44px 38px;
+    padding: 48px 48px 44px;
     border-radius: var(--r-xl);
     background: var(--ds-bg-0);
     border: 1px solid var(--ds-border-1);
-    margin: 8px 0 28px;
+    margin: 8px 0 32px;
     box-shadow: var(--ds-shadow-2);
     overflow: hidden;
   }
-  /* Very subtle gradient corner — restraint matters */
   .ds-hero::after {
     content: ""; position: absolute; top: 0; right: 0;
-    width: 380px; height: 240px; pointer-events: none;
-    background: radial-gradient(60% 80% at 80% 20%, rgba(14,165,164,0.10) 0%, transparent 70%);
+    width: 420px; height: 260px; pointer-events: none;
+    background: radial-gradient(60% 80% at 80% 20%, rgba(14,165,164,0.12) 0%, transparent 70%);
+  }
+  .ds-hero .eyebrow {
+    display: inline-block;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    color: var(--ds-accent-strong);
+    text-transform: uppercase; letter-spacing: 0.16em;
+    margin-bottom: 14px;
   }
   .ds-hero h1 {
-    font-size: 40px; margin: 10px 0 10px; font-weight: 800;
+    font-family: 'Oswald', 'Inter Tight', sans-serif;
+    font-weight: 600;
+    font-size: 60px;
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+    margin: 0 0 14px;
     color: var(--ds-text-0);
-    max-width: 720px;
+    max-width: 820px;
+  }
+  .ds-hero h1 .accent {
+    color: var(--ds-accent-strong);
+    font-weight: 600;
   }
   .ds-hero p {
     color: var(--ds-text-2); margin: 0;
-    font-size: 16px; max-width: 640px; line-height: 1.55;
+    font-size: 16px; max-width: 640px; line-height: 1.6;
   }
   .ds-pill {
     display: inline-flex; align-items: center; gap: 6px;
@@ -346,17 +364,33 @@ GLOBAL_CSS = """
     color: var(--ds-text-0);
     box-shadow: var(--ds-shadow-2);
   }
+  /* Primary CTA — teal accent, larger, with a subtle glow on hover.
+     This is the "Run agent swarm" button; we want it to look compelling. */
   .stButton > button[kind="primary"] {
-    background: var(--ds-text-0);
+    background: linear-gradient(180deg, var(--ds-accent) 0%, var(--ds-accent-strong) 100%);
     color: #FFFFFF !important;
-    border: 1px solid var(--ds-text-0);
+    border: 1px solid var(--ds-accent-strong);
     font-weight: 600;
-    box-shadow: 0 1px 2px rgba(11,20,38,0.10), 0 8px 16px -8px rgba(11,20,38,0.18);
+    font-size: 15px;
+    padding: 12px 22px;
+    letter-spacing: -0.005em;
+    box-shadow:
+      0 1px 2px rgba(11,20,38,0.10),
+      0 6px 14px -6px rgba(14,165,164,0.40),
+      inset 0 1px 0 rgba(255,255,255,0.20);
+    transition: all 180ms ease;
   }
   .stButton > button[kind="primary"]:hover {
-    background: #1A2238;
-    border-color: #1A2238;
-    box-shadow: 0 1px 2px rgba(11,20,38,0.12), 0 12px 20px -10px rgba(11,20,38,0.20);
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 2px rgba(11,20,38,0.12),
+      0 12px 24px -8px rgba(14,165,164,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .stButton > button[kind="primary"]:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
   }
 
   [role="radio"][aria-checked="true"] > div:first-child {
@@ -645,30 +679,48 @@ def inject_global_css() -> None:
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 
-def hero(title: str, subtitle: str, pill: str = "DENTASCRIBE  •  DALLAS, TX") -> None:
-    """Branded hero header. Big clinical headline, restrained gradient corner."""
+def hero(title: str = "Ready to Encounter?",
+         subtitle: str = "AI-assisted clinical scribe. Texas-compliant SOAP, "
+                          "second-opinion review, attestation-gated sign-off.",
+         eyebrow: str = "DENTASCRIBE",
+         accent_word: str | None = "Encounter?") -> None:
+    """Editorial hero. Eyebrow + Oswald display headline. The `accent_word`
+    (if present in the title) is tinted with the accent color for emphasis.
+    """
+    rendered_title = title
+    if accent_word and accent_word in title:
+        rendered_title = title.replace(
+            accent_word, f'<span class="accent">{accent_word}</span>'
+        )
     st.markdown(
         f'<div class="ds-hero">'
-        f'<div class="ds-pill">{pill}</div>'
-        f'<h1>{title}</h1>'
-        f'<p>{subtitle}</p>'
+        f'  <div class="eyebrow">{eyebrow}</div>'
+        f'  <h1>{rendered_title}</h1>'
+        f'  <p>{subtitle}</p>'
         f'</div>',
         unsafe_allow_html=True,
     )
 
 
-def hero_with_demo(title: str, subtitle: str,
-                   demo_title: str = "Hear the swarm in action",
-                   demo_sub: str = "30-sec sample of a real dental consultation",
-                   pill: str = "DENTASCRIBE  •  DALLAS, TX") -> None:
-    """Arini-style hero — headline + subtitle on the left, demo audio card
-    on the right. Visual signature element."""
+def hero_with_demo(title: str = "Ready to Encounter?",
+                   subtitle: str = "AI-assisted clinical scribe. Texas-compliant "
+                                    "SOAP, second-opinion review, attestation-gated sign-off.",
+                   eyebrow: str = "DENTASCRIBE",
+                   accent_word: str | None = "Encounter?",
+                   demo_title: str = "See it work",
+                   demo_sub: str = "30-sec sample · agent swarm + live coach") -> None:
+    """Two-column hero: editorial headline left, demo audio card right."""
+    rendered_title = title
+    if accent_word and accent_word in title:
+        rendered_title = title.replace(
+            accent_word, f'<span class="accent">{accent_word}</span>'
+        )
     st.markdown(
         f'<div class="ds-hero">'
-        f'  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:center;">'
+        f'  <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:36px;align-items:center;">'
         f'    <div>'
-        f'      <div class="ds-pill">{pill}</div>'
-        f'      <h1 style="margin-top:14px;">{title}</h1>'
+        f'      <div class="eyebrow">{eyebrow}</div>'
+        f'      <h1>{rendered_title}</h1>'
         f'      <p>{subtitle}</p>'
         f'    </div>'
         f'    <div class="ds-demo-card">'

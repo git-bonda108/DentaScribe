@@ -467,19 +467,20 @@ def _render_live_swarm_status(audit: list[dict]) -> None:
 
 def render() -> None:
     inject_global_css()
-    # Arini-style hero — big clinical headline + a signature "demo audio" card
-    # on the right. Visual focal point for first-time visitors.
+    # Editorial hero: Oswald display headline with a tinted accent word and a
+    # signature demo audio card on the right.
     from ui.theme import hero_with_demo
     hero_with_demo(
-        title="Record an encounter",
+        title="Ready to Encounter?",
         subtitle=(
             "Paste a transcript, drop in audio, or record live. A 5-agent swarm "
-            "drafts a Texas-compliant SOAP, the Second-Opinion reviewer flags safety "
-            "gaps, and you sign off when you're ready."
+            "drafts a Texas-compliant SOAP, the Second-Opinion reviewer flags "
+            "safety gaps, and you sign off when you're ready."
         ),
+        eyebrow="DENTASCRIBE",
+        accent_word="Encounter?",
         demo_title="See it work",
-        demo_sub="30-sec demo · agent swarm + live coach",
-        pill="DENTASCRIBE  •  DALLAS, TX",
+        demo_sub="30-sec sample · agent swarm + live coach",
     )
 
     result = st.session_state.get("ds_last_run")
