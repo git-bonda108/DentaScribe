@@ -244,7 +244,7 @@ def _render_chat_conversation(transcript_text: str, soap: dict | None) -> None:
         with st.expander(f"✍️ Post-STT corrections ({len(corrections)})", expanded=False):
             for c in corrections[:20]:
                 st.markdown(f"`{c.get('from')}` → **{c.get('to')}**  "
-                            f"<span style='color:#9AA6B8;font-size:11px'>{c.get('kind')}</span>",
+                            f"<span style='color:#8A95AB;font-size:11px'>{c.get('kind')}</span>",
                             unsafe_allow_html=True)
 
     # Bubbles
@@ -467,10 +467,20 @@ def _render_live_swarm_status(audit: list[dict]) -> None:
 
 def render() -> None:
     inject_global_css()
-    hero("Record an encounter",
-         "Paste a transcript, drop in audio, or synthesize a sample. The agent "
-         "swarm drafts a Texas-compliant SOAP, the Reviewer gives a second opinion, "
-         "and you sign off when you're ready.")
+    # Arini-style hero — big clinical headline + a signature "demo audio" card
+    # on the right. Visual focal point for first-time visitors.
+    from ui.theme import hero_with_demo
+    hero_with_demo(
+        title="Record an encounter",
+        subtitle=(
+            "Paste a transcript, drop in audio, or record live. A 5-agent swarm "
+            "drafts a Texas-compliant SOAP, the Second-Opinion reviewer flags safety "
+            "gaps, and you sign off when you're ready."
+        ),
+        demo_title="See it work",
+        demo_sub="30-sec demo · agent swarm + live coach",
+        pill="DENTASCRIBE  •  DALLAS, TX",
+    )
 
     result = st.session_state.get("ds_last_run")
     demo_mode = st.session_state.get("ds_mode", "Demo") == "Demo"

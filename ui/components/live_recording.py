@@ -192,28 +192,33 @@ def _maybe_fire_coach(buffer, *, demo_mode: bool, new_segments: list) -> None:
 # Left pane — live coaching recommendations
 # ===========================================================================
 
-# Per-category icon + tint to make the pane visually scannable
+# Per-category icon + tint — light-theme palette aligned with ui/theme.py.
 _CAT_META = {
-    "safety":        ("🚨", "#F26D6D", "rgba(242,109,109,0.06)"),
-    "history_gap":   ("📝", "#F4B860", "rgba(244,184,96,0.06)"),
-    "differential":  ("🩺", "#7FB7FF", "rgba(127,183,255,0.06)"),
-    "documentation": ("📋", "#C9A0FF", "rgba(201,160,255,0.06)"),
-    "billing":       ("💼", "#4DD4AC", "rgba(77,212,172,0.06)"),
+    "safety":        ("🚨", "#B91C1C", "rgba(185,28,28,0.04)"),
+    "history_gap":   ("📝", "#B45309", "rgba(180,83,9,0.04)"),
+    "differential":  ("🩺", "#2563EB", "rgba(37,99,235,0.04)"),
+    "documentation": ("📋", "#7C3AED", "rgba(124,58,237,0.04)"),
+    "billing":       ("💼", "#0B8786", "rgba(14,165,164,0.05)"),
 }
 
 
 def _render_coach_pane(coach_enabled: bool) -> None:
+    """Left pane — live coaching recommendations. Arini-toned (light) palette."""
+    badge_html = (
+        '<span style="font-size:10px;color:#0B8786;background:#E6F8F6;'
+        'border:1px solid rgba(14,165,164,0.30);padding:3px 9px;border-radius:999px;'
+        'font-weight:700;letter-spacing:0.10em;">ACTIVE</span>'
+        if coach_enabled else
+        '<span style="font-size:10px;color:#5A6478;background:#F4F6F9;'
+        'border:1px solid #DDE3EC;padding:3px 9px;border-radius:999px;'
+        'font-weight:700;letter-spacing:0.10em;">DISABLED</span>'
+    )
     st.markdown(
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
         '<span style="font-size:18px;">🩺</span>'
-        '<span style="font-size:13px;font-weight:600;color:#E5E9F2;letter-spacing:-0.005em;">'
+        '<span style="font-size:14px;font-weight:600;color:#0B1426;letter-spacing:-0.005em;">'
         'Live coaching</span>'
-        + ('<span style="font-size:10px;color:#4DD4AC;background:rgba(77,212,172,0.10);'
-            'border:1px solid rgba(77,212,172,0.30);padding:2px 8px;border-radius:999px;'
-            'font-weight:600;letter-spacing:0.06em;">ACTIVE</span>' if coach_enabled
-           else '<span style="font-size:10px;color:#9AA6B8;background:rgba(255,255,255,0.04);'
-                 'border:1px solid rgba(255,255,255,0.10);padding:2px 8px;border-radius:999px;'
-                 'font-weight:600;letter-spacing:0.06em;">DISABLED</span>')
+        + badge_html
         + '</div>',
         unsafe_allow_html=True,
     )
@@ -226,8 +231,9 @@ def _render_coach_pane(coach_enabled: bool) -> None:
     recs = list(reversed(st.session_state.get("live_recommendations") or []))
     if not recs:
         st.markdown(
-            '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);'
-            'border:1px solid rgba(255,255,255,0.06);color:#9AA6B8;font-size:13px;">'
+            '<div style="padding:16px 18px;border-radius:12px;background:#FBFCFD;'
+            'border:1px solid #EEF1F5;color:#5A6478;font-size:13px;'
+            'box-shadow:0 1px 2px rgba(11,20,38,0.04);">'
             'Waiting for transcript… recommendations will appear here as the doctor '
             'and patient speak.</div>',
             unsafe_allow_html=True,
@@ -236,7 +242,7 @@ def _render_coach_pane(coach_enabled: bool) -> None:
 
     for r in recs:
         cat = r.get("category", "documentation")
-        icon, fg, bg = _CAT_META.get(cat, ("•", "#9AA6B8", "rgba(255,255,255,0.02)"))
+        icon, fg, bg = _CAT_META.get(cat, ("•", "#5A6478", "#FBFCFD"))
         severity = (r.get("severity") or "low").upper()
         msg = r.get("message", "")
         action = r.get("suggested_action") or ""
@@ -245,26 +251,26 @@ def _render_coach_pane(coach_enabled: bool) -> None:
         fired_at = r.get("fired_at_sec")
 
         html = (
-            f'<div style="background:{bg};border:1px solid rgba(255,255,255,0.08);'
-            f'border-left:3px solid {fg};border-radius:12px;padding:14px 16px;'
-            f'margin-bottom:10px;">'
+            f'<div style="background:#FFFFFF;border:1px solid #EEF1F5;'
+            f'border-left:3px solid {fg};border-radius:10px;padding:14px 16px;'
+            f'margin-bottom:10px;box-shadow:0 1px 2px rgba(11,20,38,0.04);">'
             f'  <div style="display:flex;justify-content:space-between;align-items:center;">'
             f'    <div style="font-size:10px;color:{fg};font-weight:700;'
             f'                letter-spacing:0.10em;text-transform:uppercase;">'
             f'      {icon} {cat.replace("_", " ")} · {severity}</div>'
-            + (f'    <div style="font-size:10px;color:#6B7790;font-family:'
+            + (f'    <div style="font-size:10px;color:#8A95AB;font-family:'
                f'\'JetBrains Mono\',monospace;">+{fired_at}s</div>'
                if fired_at is not None else "")
             + f'  </div>'
-            f'  <div style="font-size:14px;font-weight:600;color:#E5E9F2;'
-            f'              margin:6px 0 4px;">{msg}</div>'
-            + (f'  <div style="font-size:13px;color:#9AA6B8;line-height:1.45;">↳ {action}</div>'
+            f'  <div style="font-size:14px;font-weight:600;color:#0B1426;'
+            f'              margin:8px 0 4px;letter-spacing:-0.005em;">{msg}</div>'
+            + (f'  <div style="font-size:13px;color:#5A6478;line-height:1.5;">↳ {action}</div>'
                if action else "")
-            + (f'  <div style="border-left:2px solid {fg};padding:4px 10px;margin-top:8px;'
-               f'              background:rgba(255,255,255,0.03);font-size:12px;'
-               f'              color:#9AA6B8;font-style:italic;border-radius:0 6px 6px 0;">'
+            + (f'  <div style="border-left:2px solid {fg};padding:5px 10px;margin-top:10px;'
+               f'              background:{bg};font-size:12px;'
+               f'              color:#5A6478;font-style:italic;border-radius:0 6px 6px 0;">'
                f'    "{quote}"</div>' if quote else "")
-            + (f'  <div style="font-size:10px;color:#6B7790;margin-top:6px;'
+            + (f'  <div style="font-size:10px;color:#8A95AB;margin-top:8px;'
                f'              font-family:\'JetBrains Mono\',monospace;">tool: {tool}</div>'
                if tool else "")
             + '</div>'
@@ -277,31 +283,31 @@ def _render_coach_pane(coach_enabled: bool) -> None:
 # ===========================================================================
 
 def _render_live_transcript_pane(buffer) -> None:
+    """Right pane — rolling transcript. Light-theme palette."""
     st.markdown(
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
         '<span style="font-size:18px;">💬</span>'
-        '<span style="font-size:13px;font-weight:600;color:#E5E9F2;letter-spacing:-0.005em;">'
+        '<span style="font-size:14px;font-weight:600;color:#0B1426;letter-spacing:-0.005em;">'
         'Live transcript</span>'
-        '<span style="font-size:10px;color:#9AA6B8;background:rgba(255,255,255,0.04);'
-        'border:1px solid rgba(255,255,255,0.10);padding:2px 8px;border-radius:999px;'
-        f'font-weight:600;letter-spacing:0.06em;">{len(buffer.segments)} TURN(S)</span>'
+        '<span style="font-size:10px;color:#5A6478;background:#F4F6F9;'
+        'border:1px solid #DDE3EC;padding:3px 9px;border-radius:999px;'
+        f'font-weight:700;letter-spacing:0.10em;">{len(buffer.segments)} TURN(S)</span>'
         '</div>',
         unsafe_allow_html=True,
     )
 
     if not buffer.segments:
         st.markdown(
-            '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);'
-            'border:1px solid rgba(255,255,255,0.06);color:#9AA6B8;font-size:13px;">'
+            '<div style="padding:16px 18px;border-radius:12px;background:#FBFCFD;'
+            'border:1px solid #EEF1F5;color:#5A6478;font-size:13px;'
+            'box-shadow:0 1px 2px rgba(11,20,38,0.04);">'
             'No speech captured yet. Click <b>Start</b> on the recorder above and '
             'speak — every 2 seconds the transcript will update here.</div>',
             unsafe_allow_html=True,
         )
         return
 
-    # Render the rolling transcript inside a scrollable container that
-    # always shows the most recent turn at the bottom (autoscroll).
-    for seg in buffer.segments[-30:]:   # cap at last 30 turns so DOM stays light
+    for seg in buffer.segments[-30:]:
         who = (seg.speaker or "unknown").lower()
         if who in ("doctor", "provider", "dr"):
             avatar, role = "👨‍⚕️", "assistant"
@@ -311,7 +317,7 @@ def _render_live_transcript_pane(buffer) -> None:
             avatar, role = "💬", "assistant"
         with st.chat_message(role, avatar=avatar):
             st.markdown(f"**{(seg.speaker or 'Unknown').title()}**  "
-                         f"<span style='font-size:10px;color:#6B7790;font-family:"
+                         f"<span style='font-size:10px;color:#8A95AB;font-family:"
                          f"\"JetBrains Mono\",monospace;'>chunk #{seg.chunk_idx}</span>",
                          unsafe_allow_html=True)
             st.write(seg.text)

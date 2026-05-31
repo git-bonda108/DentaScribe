@@ -1,12 +1,12 @@
-# DentaScribe — dark clinical theme. Aligned with ui/theme.py CSS palette.
-# Background ~ deep navy, surface ~ slate, mint-teal primary, off-white text.
+# DentaScribe — light clinical theme (Arini-inspired).
+# Anchored at white surfaces with deep-navy text; teal accent used sparingly.
 
 [theme]
-base                     = "dark"
-primaryColor             = "#4DD4AC"
-backgroundColor          = "#0B1220"
-secondaryBackgroundColor = "#121A2B"
-textColor                = "#E5E9F2"
+base                     = "light"
+primaryColor             = "#0EA5A4"
+backgroundColor          = "#FFFFFF"
+secondaryBackgroundColor = "#F8FAFB"
+textColor                = "#0B1426"
 font                     = "sans serif"
 
 [server]
