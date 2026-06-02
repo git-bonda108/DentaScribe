@@ -93,14 +93,24 @@ def render_live_recording(coach_enabled: bool = True, demo_mode: bool = True) ->
     snap = session.snapshot()
     has_text = bool(snap.segments or snap.interim_text)
     if cols[2].button("🛑  Stop & finalize", use_container_width=True,
-                       key="ds_live_finalize", type="primary" if has_text else "secondary",
+                       key="ds_live_finalize",
+                       type="primary" if has_text else "secondary",
                        disabled=not has_text,
-                       help="Close the mic, hand the full transcript to the agent swarm "
-                            "for the signed SOAP note."):
+                       help="Close the mic and IMMEDIATELY run the agent swarm "
+                            "on the recorded transcript — no tab switching."):
         session.stop()
-        st.session_state["live_handed_off_text"] = snap.transcript_text
-        st.toast("Stopped — switch to the Paste tab and click Run agent swarm.",
-                  icon="✅")
+        # Signal the parent page to kick off the swarm on the rolling text
+        # right after this rerun. The parent reads (and pops) this flag
+        # inside the live mic tab so the swarm runs inline.
+        finalized = snap.transcript_text
+        if finalized.strip():
+            st.session_state["live_finalize_pending"] = finalized
+            # Keep a copy for the Run-on-paste retry path
+            st.session_state["live_handed_off_text"] = finalized
+            st.toast("Recording stopped — running agent swarm…", icon="🎙️")
+        else:
+            st.toast("Nothing captured yet — speak first.", icon="⚠️")
+        st.rerun()
 
     # ----- WebRTC widget ----------------------------------------------
     rtc_config = RTCConfiguration({"iceServers": [

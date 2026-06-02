@@ -200,11 +200,11 @@ GLOBAL_CSS = """
      ========================================================= */
   .ds-hero {
     position: relative;
-    padding: 48px 48px 44px;
+    padding: 36px 40px 32px;
     border-radius: var(--r-xl);
     background: var(--ds-bg-0);
     border: 1px solid var(--ds-border-1);
-    margin: 8px 0 32px;
+    margin: 4px 0 24px;
     box-shadow: var(--ds-shadow-2);
     overflow: hidden;
   }
@@ -216,20 +216,20 @@ GLOBAL_CSS = """
   .ds-hero .eyebrow {
     display: inline-block;
     font-family: 'JetBrains Mono', 'SF Mono', monospace;
-    font-size: 11px; font-weight: 500;
+    font-size: 10.5px; font-weight: 500;
     color: var(--ds-accent-strong);
     text-transform: uppercase; letter-spacing: 0.16em;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
   .ds-hero h1 {
     font-family: 'Oswald', 'Inter Tight', sans-serif;
     font-weight: 600;
-    font-size: 60px;
-    line-height: 1.05;
+    font-size: 44px;
+    line-height: 1.08;
     letter-spacing: -0.005em;
-    margin: 0 0 14px;
+    margin: 0 0 12px;
     color: var(--ds-text-0);
-    max-width: 820px;
+    max-width: 760px;
   }
   .ds-hero h1 .accent {
     color: var(--ds-accent-strong);
@@ -237,7 +237,7 @@ GLOBAL_CSS = """
   }
   .ds-hero p {
     color: var(--ds-text-2); margin: 0;
-    font-size: 16px; max-width: 640px; line-height: 1.6;
+    font-size: 15px; max-width: 620px; line-height: 1.55;
   }
   .ds-pill {
     display: inline-flex; align-items: center; gap: 6px;

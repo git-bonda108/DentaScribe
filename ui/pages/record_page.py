@@ -84,14 +84,39 @@ def _adapt_review_for_ui(soap: dict | None, swarm_run) -> list[dict]:
     return out
 
 
-def _run_orchestrator(transcript_text: str, demo_mode: bool) -> dict:
+def _is_known_demo_sample(text: str) -> bool:
+    """Demo mode produces *prebaked* SOAPs keyed by case_id, which only make
+    clinical sense for the two locked demo transcripts. For ANY other text
+    (including live recordings and user-edited prose) demo mode would emit
+    the canned SOAP that doesn't match the input — that's the bug the user
+    hit. This function detects whether the input is close enough to a
+    locked sample that Demo mode would produce a sensible result.
+    """
+    t = (text or "").lower()
+    endo_markers = ["tooth nineteen", "irreversible pulpitis", "lower left", "root canal"]
+    recall_markers = ["six-month cleaning", "six month cleaning",
+                      "bleeding when i brush", "occlusal caries",
+                      "tooth thirty", "tooth 30", "tooth #30"]
+    if sum(m in t for m in endo_markers) >= 2:
+        return True
+    if sum(m in t for m in recall_markers) >= 2:
+        return True
+    return False
+
+
+def _run_orchestrator(transcript_text: str, demo_mode: bool,
+                      *, source: str = "paste") -> dict:
     """Run the Batch-4 agent swarm against a transcript.
 
-    `demo_mode=True`  → LLMClient(demo=True), uses locked fixtures, $0 cost.
-    `demo_mode=False` → real Claude API. Cost is tracked per call.
+    `demo_mode` is *requested* mode. We may downgrade it to Live silently
+    when the transcript clearly isn't one of the locked demo samples —
+    otherwise the user would see a prebaked SOAP that doesn't match their
+    actual recording (the bug reported on live mic).
 
-    Returns a flat dict the UI consumes:
-        {soap, validation, review, audit_records, cost, audio_quality}
+    `source` is a tag for the result so the UI can show what the SOAP came
+    from ('paste' / 'live' / 'upload' / 'synth').
+
+    Returns: {soap, validation, review, audit_records, cost, ...}
     """
     try:
         from core.llm_client import LLMClient
@@ -102,9 +127,14 @@ def _run_orchestrator(transcript_text: str, demo_mode: bool) -> dict:
                 "validation": None, "review": [], "audit_records": [],
                 "cost": {"total_usd": 0.0, "by_agent": [], "live_calls": 0, "demo_calls": 0}}
 
+    # Smart routing: live recordings + user-edited paste + synth all need
+    # real Claude. Only canonical locked-sample text uses demo mode.
+    effective_demo = demo_mode and _is_known_demo_sample(transcript_text) \
+                     and source in ("paste", "synth")
     case_id, visit_type = _detect_case_id(transcript_text)
+
     try:
-        llm = LLMClient(demo=demo_mode)
+        llm = LLMClient(demo=effective_demo)
         orch = Orchestrator(llm=llm)
         swarm_run = orch.run(
             transcript=transcript_text,
@@ -127,6 +157,9 @@ def _run_orchestrator(transcript_text: str, demo_mode: bool) -> dict:
         "case_id": case_id,
         "visit_type": visit_type,
         "duration_ms": swarm_run.duration_ms,
+        "source": source,
+        "effective_demo": effective_demo,
+        "transcript_text": transcript_text,
     }
 
 
@@ -157,6 +190,126 @@ def _load_blank_template():
             return json.load(f)
     except Exception:
         return None
+
+
+# ============================================================
+# Per-tab Run helpers — one tab, one transcript, one button.
+# Eliminates the cross-tab handoff confusion the user hit
+# (live recording got swarm-run on the demo paste).
+# ============================================================
+
+def _kickoff_swarm(transcript: str, *, demo_mode: bool, source: str,
+                   spinner_label: str) -> None:
+    """Run the swarm and stash the result. Always under a st.status block
+    so the user sees the agent progress. Triggers a rerun so the results
+    section below renders immediately."""
+    if not transcript or not transcript.strip():
+        st.warning("No transcript to run on. Speak / paste / synthesize first.")
+        return
+    with st.status(spinner_label, expanded=True) as status:
+        status.write("📋  Scribe writing SOAP note…")
+        status.write("✅  Compliance running TSBDE checklist…")
+        status.write("💼  Coder selecting CDT codes (allow-list constrained)…")
+        status.write("🔍  Validator: structural + grounding + CDT + Texas…")
+        status.write("🩺  Second-Opinion reviewing for safety + billing gaps…")
+        result = _run_orchestrator(transcript, demo_mode=demo_mode, source=source)
+        st.session_state["ds_last_run"] = result
+        if result.get("cost"):
+            st.session_state["ds_last_cost"] = result["cost"]
+        ok = (not result.get("_error")
+              and (result.get("validation") or {}).get("counts", {}).get("errors", 0) == 0)
+        status.update(
+            label=("✅ Swarm complete — sign-ready" if ok
+                   else "⚠️ Swarm complete — needs review"),
+            state="complete" if ok else "error",
+            expanded=False,
+        )
+    st.toast(f"SOAP generated from {source}", icon="🎉")
+    st.rerun()
+
+
+def _render_paste_tab_and_run(demo_mode: bool) -> None:
+    """Paste tab: textarea + inline Run."""
+    text = st.text_area(
+        "Doctor / Patient dialogue",
+        value=st.session_state.get("ds_paste_text", SAMPLE_TRANSCRIPT),
+        key="ds_paste_text",
+        height=180, label_visibility="collapsed",
+    )
+    is_sample = _is_known_demo_sample(text)
+    cols = st.columns([1.4, 3])
+    if cols[0].button("▶  Run agent swarm", type="primary",
+                       use_container_width=True, key="ds_run_paste"):
+        _kickoff_swarm(text, demo_mode=demo_mode, source="paste",
+                        spinner_label=("Demo mode — booting agent swarm…"
+                                       if demo_mode and is_sample
+                                       else "Live (Claude) — running agent swarm…"))
+    cols[1].caption(
+        f"{'🎯 Demo fixture detected — $0 run.' if (demo_mode and is_sample) else '⚡ Live Claude — typical cost $0.05–0.10.'}"
+    )
+
+
+def _render_upload_tab_and_run(demo_mode: bool) -> None:
+    """Upload tab: file picker → STT → inline Run."""
+    up = st.file_uploader("Drop .wav/.mp3/.m4a", type=["wav", "mp3", "m4a"],
+                           label_visibility="collapsed", key="ds_upload_file")
+    if up is None:
+        st.caption("Upload a recorded consultation. We'll run it through "
+                    "Deepgram, then the agent swarm.")
+        return
+    if "ds_upload_transcript" not in st.session_state or \
+       st.session_state.get("ds_upload_file_name") != up.name:
+        with st.spinner("Transcribing via Deepgram…"):
+            text = _transcribe_uploaded_audio(up)
+        st.session_state["ds_upload_transcript"] = text
+        st.session_state["ds_upload_file_name"] = up.name
+    text = st.session_state.get("ds_upload_transcript", "")
+    if not text.strip():
+        st.warning("Transcription returned empty. Check DEEPGRAM_API_KEY or audio quality.")
+        return
+    with st.expander("Transcript preview", expanded=False):
+        st.code(text, language="text")
+    cols = st.columns([1.4, 3])
+    if cols[0].button("▶  Run agent swarm", type="primary",
+                       use_container_width=True, key="ds_run_upload"):
+        _kickoff_swarm(text, demo_mode=False, source="upload",
+                        spinner_label="Live (Claude) — running agent swarm on uploaded audio…")
+    cols[1].caption("⚡ Live Claude — uploaded audio always runs through real Claude.")
+
+
+def _render_live_mic_tab_and_run() -> None:
+    """Live mic tab: WebRTC + 'Stop & finalize' that ALSO runs the swarm
+    immediately on the rolling transcript — no cross-tab handoff. Live
+    mic always runs in Live (Claude) mode regardless of the sidebar."""
+    from ui.components.live_recording import render_live_recording
+    coach_enabled = st.session_state.get("ds_coach_enabled", True)
+    # Live recordings ALWAYS use Live mode — demo would return canned SOAP.
+    render_live_recording(coach_enabled=coach_enabled, demo_mode=False)
+
+    # When live_recording.py sets this flag after Stop & finalize, fire
+    # the swarm right here so the user doesn't have to switch tabs.
+    pending = st.session_state.pop("live_finalize_pending", None)
+    if pending:
+        _kickoff_swarm(pending, demo_mode=False, source="live",
+                        spinner_label="Live recording finalized — running agent swarm…")
+
+
+def _render_synth_tab_and_run(demo_mode: bool) -> None:
+    """Synth tab: TTS playback + inline Run."""
+    text = _render_tts_synthesis_tab()
+    if not text or not text.strip():
+        return
+    is_sample = _is_known_demo_sample(text)
+    cols = st.columns([1.4, 3])
+    if cols[0].button("▶  Run agent swarm", type="primary",
+                       use_container_width=True, key="ds_run_synth"):
+        _kickoff_swarm(text, demo_mode=demo_mode, source="synth",
+                        spinner_label=("Demo mode — booting agent swarm…"
+                                       if demo_mode and is_sample
+                                       else "Live (Claude) — running agent swarm on synthesized audio…"))
+    cols[1].caption(
+        f"{'🎯 Demo fixture detected — $0 run.' if (demo_mode and is_sample) else '⚡ Live Claude — typical cost $0.05–0.10.'}"
+    )
 
 
 SAMPLE_TRANSCRIPT = (
@@ -489,72 +642,27 @@ def render() -> None:
     # ---- KPI strip (always visible — placeholders before first run) ----
     _render_kpi_strip(result, demo_mode)
 
-    # ---- Input section ----
+    # ---- Input section: each tab owns its OWN Run flow ----
     with st.container(border=True):
         st.markdown("##### 🎙️  Capture transcript")
         tab_paste, tab_upload, tab_mic, tab_tts = st.tabs(
             ["📝  Paste", "📁  Upload audio", "🎤  Live mic", "🔊  Synthesize sample"]
         )
-        transcript_text = ""
         with tab_paste:
-            transcript_text = st.text_area(
-                "Doctor / Patient dialogue", value=SAMPLE_TRANSCRIPT,
-                height=180, label_visibility="collapsed",
-            )
+            _render_paste_tab_and_run(demo_mode)
         with tab_upload:
-            up = st.file_uploader("Drop .wav/.mp3/.m4a", type=["wav", "mp3", "m4a"],
-                                  label_visibility="collapsed")
-            if up is not None:
-                transcript_text = _transcribe_uploaded_audio(up)
+            _render_upload_tab_and_run(demo_mode)
         with tab_mic:
-            # Live WebRTC mic capture + Coach pane. Component owns its own
-            # session state; we just hand it the toggles.
-            from ui.components.live_recording import render_live_recording
-            coach_enabled = st.session_state.get("ds_coach_enabled", True)
-            demo_mode_now = st.session_state.get("ds_mode", "Demo") == "Demo"
-            render_live_recording(coach_enabled=coach_enabled,
-                                   demo_mode=demo_mode_now)
-            # When the live pane hands off, pre-fill the run transcript so
-            # the user can click Run agent swarm.
-            handed = st.session_state.get("live_handed_off_text")
-            if handed:
-                transcript_text = handed
+            _render_live_mic_tab_and_run()   # always Live (Claude) for real recordings
         with tab_tts:
-            transcript_text = _render_tts_synthesis_tab() or transcript_text
+            _render_synth_tab_and_run(demo_mode)
 
-        c_run, c_clear, _ = st.columns([1, 1, 4])
-        run = c_run.button("▶  Run agent swarm", type="primary", use_container_width=True)
-        clear = c_clear.button("Clear", use_container_width=True)
-        if clear:
-            for k in ("ds_last_run", "ds_last_cost", "ds_audio_quality", "ds_corrections"):
+        st.divider()
+        if st.button("Clear last run", use_container_width=False):
+            for k in ("ds_last_run", "ds_last_cost", "ds_audio_quality",
+                       "ds_corrections", "ds_last_source"):
                 st.session_state.pop(k, None)
             st.rerun()
-
-    # ---- Execute the run ----
-    if run and transcript_text.strip():
-        with st.status(
-            "Demo mode — booting agent swarm…" if demo_mode
-            else "Live (Claude) mode — booting agent swarm…",
-            expanded=True,
-        ) as status:
-            status.write("📋  Scribe writing SOAP note…")
-            status.write("✅  Compliance running TSBDE checklist…")
-            status.write("💼  Coder selecting CDT codes (allow-list constrained)…")
-            status.write("🔍  Validator: structural + grounding + CDT + Texas…")
-            status.write("🩺  Second-Opinion reviewing for safety + billing gaps…")
-            result = _run_orchestrator(transcript_text, demo_mode=demo_mode)
-            st.session_state["ds_last_run"] = result
-            if result.get("cost"):
-                st.session_state["ds_last_cost"] = result["cost"]
-            ok = not result.get("_error") and (result.get("validation") or {}).get("counts", {}).get("errors", 0) == 0
-            status.update(
-                label=("✅ Swarm complete — sign-ready" if ok
-                       else "⚠️ Swarm complete — needs review"),
-                state="complete" if ok else "error",
-                expanded=False,
-            )
-        st.toast("Agent swarm complete!", icon="🎉")
-        st.rerun()  # refresh KPI strip with new numbers
 
     if not result:
         st.info("👆  Paste a transcript or pick **Synthesize sample**, then click **Run agent swarm**.")
