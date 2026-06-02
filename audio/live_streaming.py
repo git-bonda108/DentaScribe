@@ -207,7 +207,7 @@ class LiveDeepgramSession:
                 self._set_error("live.start() returned False")
                 return False
             self._live = live
-            self._sample_rate = int(sample_rate)
+            self._sample_rate = self.TARGET_SAMPLE_RATE
             self._started_at = time.time()
             return True
 
