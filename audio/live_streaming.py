@@ -80,6 +80,13 @@ class LiveDeepgramSession:
     on its own thread; we copy values out under the lock.
     """
 
+    # Deepgram-side fixed format — we resample EVERY input frame to this,
+    # regardless of what the browser/mic provided. Eliminates channel-layout
+    # and sample-rate guessing that caused the "0 transcripts" bug.
+    TARGET_SAMPLE_RATE = 16000
+    TARGET_FORMAT      = "s16"     # signed 16-bit, packed
+    TARGET_LAYOUT      = "mono"
+
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._segments: list[LiveSegment] = []
@@ -91,6 +98,9 @@ class LiveDeepgramSession:
         self._live = None
         self._started_at: float = 0.0
         self._sample_rate: Optional[int] = None
+        # PyAV resampler — created lazily on first frame; reused thereafter.
+        # One per session so it can hold internal state across frames.
+        self._resampler = None
 
     # ---- public API ----------------------------------------------------
 
@@ -110,10 +120,14 @@ class LiveDeepgramSession:
                 last_error=self._last_error,
             )
 
-    def start(self, sample_rate: int = 48000) -> bool:
+    def start(self, sample_rate: int | None = None) -> bool:
         """Open the WebSocket. Returns True on success.
-        Safe to call only when state is idle/closed/error.
+
+        `sample_rate` is ignored — we ALWAYS tell Deepgram 16000 Hz mono
+        and resample every input frame to match. Argument kept for backward
+        compatibility with older callers; can be None.
         """
+        _ = sample_rate   # intentionally unused; resampler is canonical
         if self._state == "streaming":
             return True
         api_key = os.getenv("DEEPGRAM_API_KEY")
@@ -184,7 +198,7 @@ class LiveDeepgramSession:
                 utterance_end_ms="1000",
                 vad_events=True,
                 encoding="linear16",
-                sample_rate=int(sample_rate),
+                sample_rate=self.TARGET_SAMPLE_RATE,
                 channels=1,
             )
 
@@ -200,6 +214,46 @@ class LiveDeepgramSession:
         except Exception as e:
             self._set_error(f"start failed: {type(e).__name__}: {e}")
             return False
+
+    def ingest_frame(self, frame) -> None:
+        """Accept ONE PyAV AudioFrame from streamlit-webrtc and stream it
+        to Deepgram, normalized to 16-bit mono 16 kHz PCM.
+
+        Uses av.AudioResampler so we don't have to guess at the input
+        channel layout (planar vs packed) or sample rate — it handles
+        everything the browser might send.
+        """
+        if frame is None:
+            return
+        if self._state == "idle":
+            # Auto-start on the first frame seen
+            if not self.start():
+                return
+        if self._state != "streaming" or self._live is None:
+            return
+        try:
+            import av
+            if self._resampler is None:
+                self._resampler = av.AudioResampler(
+                    format=self.TARGET_FORMAT,
+                    layout=self.TARGET_LAYOUT,
+                    rate=self.TARGET_SAMPLE_RATE,
+                )
+            # resample() returns a list of one or more AudioFrames at the
+            # target format. They may not be 1:1 with input frames.
+            out_frames = self._resampler.resample(frame)
+            for of in out_frames:
+                # `to_ndarray()` on a packed s16 mono frame is shape (1, N).
+                # We need the raw bytes — use planes[0].
+                pcm = bytes(of.planes[0])
+                if not pcm:
+                    continue
+                self._live.send(pcm)
+                with self._lock:
+                    self._frames_sent += 1
+                    self._bytes_sent += len(pcm)
+        except Exception as e:
+            self._set_error(f"resample/send: {type(e).__name__}: {e}")
 
     def send(self, pcm16_bytes: bytes) -> None:
         """Push raw 16-bit PCM audio bytes. No-op if not streaming."""

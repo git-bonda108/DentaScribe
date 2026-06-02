@@ -148,23 +148,16 @@ def _audio_drain_fragment(ctx, *, coach_enabled: bool, demo_mode: bool) -> None:
     session = st.session_state["live_session"]
 
     # --- 1. Poll WebRTC frames + stream to Deepgram --------------------
+    # PyAV resampler inside `ingest_frame` normalizes whatever the browser
+    # sends (48kHz stereo float, 16kHz mono, etc.) to 16-bit mono 16kHz PCM,
+    # so Deepgram always sees the same format. Auto-starts on first frame.
     if ctx and ctx.state.playing and ctx.audio_receiver:
         try:
             frames = ctx.audio_receiver.get_frames(timeout=0.05)
         except Exception:
             frames = []
-
-        # Lazy-start the WS on the first frame so we know the sample rate
-        first_sample_rate = 0
-        if frames and not session.is_running:
-            _, first_sample_rate = frame_to_pcm16_bytes(frames[0])
-            if first_sample_rate:
-                session.start(sample_rate=first_sample_rate)
-
         for f in frames:
-            pcm, _sr = frame_to_pcm16_bytes(f)
-            if pcm:
-                session.send(pcm)
+            session.ingest_frame(f)
 
     # --- 2. Maybe fire coach (only when new finalized segments arrived) -
     snap = session.snapshot()
