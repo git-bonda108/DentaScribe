@@ -683,10 +683,16 @@ def hero(title: str = "Ready to Encounter?",
          subtitle: str = "AI-assisted clinical scribe. Texas-compliant SOAP, "
                           "second-opinion review, attestation-gated sign-off.",
          eyebrow: str = "DENTASCRIBE",
-         accent_word: str | None = "Encounter?") -> None:
+         accent_word: str | None = "Encounter?",
+         pill: str | None = None) -> None:
     """Editorial hero. Eyebrow + Oswald display headline. The `accent_word`
     (if present in the title) is tinted with the accent color for emphasis.
+
+    `pill` is a deprecated alias for `eyebrow` — older pages (audit, admin)
+    call `hero(..., pill="…")` from the earlier API; we accept it silently.
     """
+    if pill is not None:
+        eyebrow = pill
     rendered_title = title
     if accent_word and accent_word in title:
         rendered_title = title.replace(
