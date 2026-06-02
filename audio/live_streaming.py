@@ -166,31 +166,27 @@ class LiveDeepgramSession:
             live.on(LiveTranscriptionEvents.Close, _on_close)
             live.on(LiveTranscriptionEvents.Error, _on_error)
 
+            # Build the LiveOptions in one shot — assigning attributes after
+            # construction trips a serialization quirk that the Deepgram WS
+            # rejects with HTTP 400. Pass everything to the constructor.
+            #
+            # Keyword boost is intentionally omitted on the live WS path —
+            # we verified the chunked-REST keyterm format ('word:intensity')
+            # is rejected here, and the post-STT phonetic-correction layer
+            # already handles dental term recovery downstream.
             options = LiveOptions(
                 model=os.getenv("DEEPGRAM_MODEL", "nova-3-medical"),
                 language="en-US",
-                # Snap on word boundaries; emit interims so the UI feels live.
                 interim_results=True,
                 smart_format=True,
                 punctuate=True,
-                # Diarize across the whole session (NOT per chunk).
                 diarize=True,
                 utterance_end_ms="1000",
                 vad_events=True,
-                # Tell Deepgram what we're sending — raw PCM 16-bit mono.
                 encoding="linear16",
                 sample_rate=int(sample_rate),
                 channels=1,
             )
-
-            # Dental keyterm boost — same list as the chunked path
-            try:
-                from audio.deepgram_stt import _selected_keywords
-                kws = _selected_keywords()
-                if kws:
-                    options.keywords = kws
-            except Exception:
-                pass
 
             ok = live.start(options)
             if not ok:
