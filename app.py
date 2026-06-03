@@ -21,10 +21,24 @@ from __future__ import annotations
 import os
 import streamlit as st
 
-# Load .env BEFORE anything that reads env vars
+# ─── Secrets bridge ─────────────────────────────────────────────────────
+# Streamlit Cloud injects secrets via st.secrets (TOML in Settings).
+# The rest of the app reads from os.environ via core/config.py, so we
+# copy them across here BEFORE any other module imports.
+# Locally, .env still works through load_dotenv().
+try:
+    _secrets = dict(st.secrets)
+except (FileNotFoundError, KeyError, AttributeError):
+    _secrets = {}
+for _k, _v in _secrets.items():
+    if isinstance(_v, str) and not os.environ.get(_k):
+        os.environ[_k] = _v
+
+# Local .env still wins for dev (override=True). On Cloud .env doesn't
+# exist, so the st.secrets values stay.
 try:
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    load_dotenv(override=False)   # don't clobber st.secrets-provided values
 except Exception:
     pass
 
