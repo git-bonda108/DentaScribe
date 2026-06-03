@@ -35,7 +35,25 @@ from __future__ import annotations
 import re
 from typing import List, Tuple, Optional, Dict
 
-from agents.knowledge import DentalKnowledge, _stem
+# Inline stemmer — was previously imported from agents/knowledge.py, but that
+# whole legacy module was removed during the batch-4 cleanup. This 4-line
+# helper is the only thing we needed from it.
+_STEM_SUFFIXES = (
+    "iest", "ingly", "edly", "ness", "ment", "tion", "sion", "able", "ible",
+    "ation", "ition", "ing", "ied", "ies", "ous", "ive", "ed", "es", "er",
+    "ly", "al", "ic", "s", "y",
+)
+def _stem(word: str) -> str:
+    w = (word or "").lower()
+    for suf in _STEM_SUFFIXES:
+        if len(w) > len(suf) + 2 and w.endswith(suf):
+            return w[:-len(suf)]
+    return w
+
+# `DentalKnowledge` is no longer imported here — text_correction.py only
+# referenced its `_stem` helper. The earlier dependency on the class was
+# removed in the cleanup.
+DentalKnowledge = None   # type: ignore  # legacy compat for any stale callers
 
 
 # ---------- thresholds ----------
