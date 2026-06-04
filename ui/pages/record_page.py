@@ -686,7 +686,11 @@ def render() -> None:
         "🔍  Second-Opinion", "🦷  Tooth chart", "📊  Audit & Cost",
     ])
     with tabs[0]:
-        _render_chat_conversation(transcript_text or _sample_transcript_from_soap(soap), soap)
+        # The transcript that was sent to the swarm is stored on the result
+        # dict by `_run_orchestrator()`. Falls back to reconstructing from
+        # SOAP segments if for any reason it wasn't captured.
+        run_transcript = result.get("transcript_text") or _sample_transcript_from_soap(soap)
+        _render_chat_conversation(run_transcript, soap)
     with tabs[1]:
         _render_soap_view(soap)
     with tabs[2]:
